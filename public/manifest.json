@@ -1,0 +1,23 @@
+{
+  "short_name": "ElderCare",
+  "name": "ElderCare Fall Detection Dashboard",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#EAF2F0",
+  "theme_color": "#0F4C3F",
+  "display": "standalone",
+  "orientation": "portrait"
+}
