@@ -48,8 +48,12 @@ let telemetryState = {
   impact: 0.0,
   lat: 12.9716,
   lon: 77.5946,
-  hr: 72,
+  hr: 0,
   battery: 89,
+  spo2: 0,
+  ax: 0.0,
+  ay: 0.0,
+  az: 1.0,
   deviceName: "ElderCare SafeBand v1",
   connectionStatus: "Connected",
   lastUpdated: new Date().toISOString()
@@ -122,7 +126,7 @@ app.get('/api/status', (req, res) => {
 
 // ESP32 alert ingestion webhook
 app.post('/api/alert', async (req, res) => {
-  const { status, impact, lat, lon, hr, battery } = req.body;
+  const { status, impact, lat, lon, hr, battery, spo2, ax, ay, az } = req.body;
   console.log('Received ESP32 / Alert payload:', req.body);
 
   // Update backend memory state
@@ -133,6 +137,10 @@ app.post('/api/alert', async (req, res) => {
     lon: typeof lon === 'number' ? lon : telemetryState.lon,
     hr: typeof hr === 'number' ? hr : telemetryState.hr,
     battery: typeof battery === 'number' ? battery : telemetryState.battery,
+    spo2: typeof spo2 === 'number' ? spo2 : telemetryState.spo2,
+    ax: typeof ax === 'number' ? ax : telemetryState.ax,
+    ay: typeof ay === 'number' ? ay : telemetryState.ay,
+    az: typeof az === 'number' ? az : telemetryState.az,
     deviceName: telemetryState.deviceName,
     connectionStatus: "Connected",
     lastUpdated: new Date().toISOString()

@@ -43,88 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
    CALENDAR STRIP GENERATOR
 ---------------------------------------------------- */
 function initCalendar() {
-  const calendarDays = document.getElementById('calendar-days');
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const today = new Date();
-  
-  // Clear container and inject sliding background backplate
-  calendarDays.innerHTML = '<div class="calendar-slider-bg" id="calendar-slider-bg"></div>';
-
-  let activeNode = null;
-
-  // Generate Mon-Sun strip around current date (from 3 days ago to 3 days ahead)
-  for (let i = -3; i <= 3; i++) {
-    const targetDate = new Date();
-    targetDate.setDate(today.getDate() + i);
-
-    const dayName = daysOfWeek[targetDate.getDay()];
-    const dayNum = targetDate.getDate();
-    const isToday = i === 0;
-
-    const dayDayNode = document.createElement('div');
-    dayDayNode.className = `cal-day-node ${isToday ? 'active' : ''}`;
-    
-    // Inline function to update content based on active state and today's status
-    const updateContent = (isActive) => {
-      if (isActive && isToday) {
-        dayDayNode.innerHTML = `
-          <span class="day-label">${dayName}</span>
-          <span class="day-today">Today</span>
-          <span class="day-num">${dayNum}</span>
-        `;
-      } else {
-        dayDayNode.innerHTML = `
-          <span class="day-label">${dayName}</span>
-          <span class="day-num">${dayNum}</span>
-        `;
-      }
-    };
-
-    updateContent(isToday);
-
-    dayDayNode.addEventListener('click', () => {
-      document.querySelectorAll('.cal-day-node').forEach(node => {
-        node.classList.remove('active');
-        if (node.updateContentFn) {
-          node.updateContentFn(false);
-        }
-      });
-      
-      dayDayNode.classList.add('active');
-      updateContent(true);
-      updateCalendarSlider(dayDayNode);
-    });
-
-    // Reference callback directly on node
-    dayDayNode.updateContentFn = updateContent;
-
-    calendarDays.appendChild(dayDayNode);
-
-    if (isToday) {
-      activeNode = dayDayNode;
-    }
-  }
-
-  // Position date backplate slider after DOM layout calculations
-  if (activeNode) {
-    setTimeout(() => updateCalendarSlider(activeNode), 100);
-  }
-  
-  // Reposition slider background on window resize events to keep visual alignment
-  window.addEventListener('resize', () => {
-    const node = document.querySelector('.cal-day-node.active');
-    if (node) updateCalendarSlider(node);
-  });
+  // Calendar removed for clinical medical telemetry view
 }
 
 function updateCalendarSlider(node) {
-  const slider = document.getElementById('calendar-slider-bg');
-  if (slider && node) {
-    slider.style.transform = `translateX(${node.offsetLeft}px)`;
-    slider.style.width = `${node.offsetWidth}px`;
-    slider.style.height = `${node.offsetHeight}px`;
-    slider.style.top = `${node.offsetTop}px`;
-  }
+  // Slider removed for clinical medical telemetry view
 }
 
 /* ----------------------------------------------------
@@ -190,76 +113,11 @@ function updateMapCoords(lat, lon) {
    NAVIGATION TABS CONTROL WITH SLIDING TRANSITIONS
 ---------------------------------------------------- */
 function initTabs() {
-  const tabs = document.querySelectorAll('.tab-btn');
-  const navItems = document.querySelectorAll('.nav-item');
-
-  // Multi-tier navigation router bindings
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      const target = tab.getAttribute('data-tab');
-      switchTab(target);
-      
-      // Update equivalent navbar highlights
-      navItems.forEach(item => {
-        const navBind = item.getAttribute('data-nav');
-        if ((target === 'dashboard' && navBind === 'home') || 
-            (target === 'health-logs' && navBind === 'health')) {
-          item.classList.add('active');
-        } else {
-          item.classList.remove('active');
-        }
-      });
-    });
-  });
-
-  navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      const navBind = item.getAttribute('data-nav');
-      if (navBind === 'home') {
-        switchTab('dashboard');
-      } else if (navBind === 'health') {
-        switchTab('health-logs');
-      }
-      
-      navItems.forEach(n => n.classList.remove('active'));
-      item.classList.add('active');
-    });
-  });
+  // Tabs navigation removed to present unified dashboard grid
 }
 
 function switchTab(tabId) {
-  const tabs = document.querySelectorAll('.tab-btn');
-  const panels = document.querySelectorAll('.tab-panel');
-  const slider = document.getElementById('tabs-content-slider');
-  const sliderBg = document.getElementById('tabs-slider-bg');
-
-  // Update tabs active state classes
-  tabs.forEach(tab => {
-    if (tab.getAttribute('data-tab') === tabId) {
-      tab.classList.add('active');
-    } else {
-      tab.classList.remove('active');
-    }
-  });
-
-  // Calculate sliding offsets and assign css transforms
-  if (tabId === 'dashboard') {
-    if (slider) slider.style.transform = 'translateX(0)';
-    if (sliderBg) sliderBg.style.transform = 'translateX(0)';
-  } else if (tabId === 'health-logs') {
-    if (slider) slider.style.transform = 'translateX(-50%)';
-    // Move the background plate behind Health Logs tab (offset 100%)
-    if (sliderBg) sliderBg.style.transform = 'translateX(100%)';
-  }
-
-  // Toggle active class on panels for opacity fades
-  panels.forEach(panel => {
-    if (panel.id === `tab-${tabId}`) {
-      panel.classList.add('active');
-    } else {
-      panel.classList.remove('active');
-    }
-  });
+  // Tabs navigation removed to present unified dashboard grid
 }
 
 /* ----------------------------------------------------
@@ -422,8 +280,25 @@ function renderTelemetry(data) {
   document.getElementById('device-status-text').innerText = data.connectionStatus || 'Connected';
   document.getElementById('telemetry-impact').innerText = `${(data.impact || 0.0).toFixed(1)} G`;
   document.getElementById('sync-time').innerText = new Date(data.lastUpdated).toLocaleTimeString();
-  document.getElementById('bpm-val').innerText = data.hr || '72';
+  document.getElementById('bpm-val').innerText = data.hr > 0 ? data.hr : '---';
   document.getElementById('battery-value-text').innerText = `${data.battery || 89}%`;
+
+  // Bind new diagnostics elements
+  const ax = typeof data.ax === 'number' ? data.ax.toFixed(2) : '0.00';
+  const ay = typeof data.ay === 'number' ? data.ay.toFixed(2) : '0.00';
+  const az = typeof data.az === 'number' ? data.az.toFixed(2) : '1.00';
+  const accelEl = document.getElementById('diag-accel-val');
+  if (accelEl) accelEl.innerText = `${ax}G, ${ay}G, ${az}G`;
+
+  const spo2 = typeof data.spo2 === 'number' ? data.spo2 : 0;
+  const spo2El = document.getElementById('diag-spo2-val');
+  const fingerEl = document.getElementById('diag-finger-val');
+  if (spo2El) {
+    spo2El.innerText = spo2 > 0 ? `${spo2}%` : '---';
+  }
+  if (fingerEl) {
+    fingerEl.innerText = spo2 > 0 ? 'Finger Detected' : 'No Finger';
+  }
 
   // 3. Leaflet Dynamic Map Marker Location
   if (typeof data.lat === 'number' && typeof data.lon === 'number') {
@@ -432,15 +307,20 @@ function renderTelemetry(data) {
 
   // Update heart rate description warning threshold
   const hrSub = document.getElementById('bpm-subtext');
-  if (data.hr > 100) {
-    hrSub.innerText = 'Heart rate is elevated (Alert Level)';
-    hrSub.style.color = 'var(--danger-red)';
-  } else if (data.hr < 55) {
-    hrSub.innerText = 'Heart rate is low (Bradycardia risks)';
-    hrSub.style.color = 'var(--danger-red)';
-  } else {
-    hrSub.innerText = 'Pulse is currently normal & stable';
-    hrSub.style.color = 'var(--text-muted)';
+  if (hrSub) {
+    if (data.hr === 0) {
+      hrSub.innerText = 'Please place index finger on the sensor';
+      hrSub.style.color = 'var(--text-muted)';
+    } else if (data.hr > 100) {
+      hrSub.innerText = 'Heart rate is elevated (Alert Level)';
+      hrSub.style.color = 'var(--danger-red)';
+    } else if (data.hr < 55) {
+      hrSub.innerText = 'Heart rate is low (Bradycardia risks)';
+      hrSub.style.color = 'var(--danger-red)';
+    } else {
+      hrSub.innerText = 'Pulse is currently normal & stable';
+      hrSub.style.color = 'var(--text-muted)';
+    }
   }
 }
 
@@ -581,7 +461,11 @@ function setupActionListeners() {
       lat: 12.9780, // slightly shifted coords to mock movement
       lon: 77.5910,
       hr: 104,
-      battery: 87
+      battery: 87,
+      spo2: 96,
+      ax: 1.25,
+      ay: 2.15,
+      az: 2.45
     };
     triggerSimulatedTelemetry(payload);
   });
@@ -594,7 +478,11 @@ function setupActionListeners() {
       lat: DEFAULT_COORDS[0],
       lon: DEFAULT_COORDS[1],
       hr: 74,
-      battery: 91
+      battery: 91,
+      spo2: 99,
+      ax: 0.02,
+      ay: -0.04,
+      az: 0.99
     };
     triggerSimulatedTelemetry(payload);
   });
@@ -607,7 +495,11 @@ function setupActionListeners() {
       lat: 12.9690,
       lon: 77.5990,
       hr: 112,
-      battery: 85
+      battery: 85,
+      spo2: 95,
+      ax: 1.50,
+      ay: 2.80,
+      az: 2.65
     };
     triggerSimulatedTelemetry(payload);
   });
