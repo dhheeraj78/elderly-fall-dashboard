@@ -7,7 +7,7 @@ import datetime
 
 PORT = '/dev/tty.usbserial-0001'
 BAUD = 115200
-FIREBASE_DB_URL = 'https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com'
+FIREBASE_DB_URL = 'https://elderly-fall-detection-a0f34-default-rtdb.firebaseio.com'
 
 print(f"Starting Serial Bridge on {PORT}...")
 

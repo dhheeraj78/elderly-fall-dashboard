@@ -9,13 +9,14 @@ let sirenInterval = null;
 
 // Firebase App Initialization Compat
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCLg2RSWlhJvhs26L5ajq_NsLW3uvak1ME",
+  authDomain: "elderly-fall-detection-a0f34.firebaseapp.com",
+  databaseURL: "https://elderly-fall-detection-a0f34-default-rtdb.firebaseio.com",
+  projectId: "elderly-fall-detection-a0f34",
+  storageBucket: "elderly-fall-detection-a0f34.firebasestorage.app",
+  messagingSenderId: "63630423174",
+  appId: "1:63630423174:web:695f4e96eadc76789d4d07",
+  measurementId: "G-EEC35F88KS"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
