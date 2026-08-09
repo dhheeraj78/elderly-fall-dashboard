@@ -105,8 +105,11 @@ function updateMapCoords(lat, lon) {
     const latLng = [lat, lon];
     marker.setLatLng(latLng);
     map.panTo(latLng);
-    document.getElementById('coords-text').innerText = `${lat.toFixed(4)}° N, ${lon.toFixed(4)}° E`;
   }
+  const latEl = document.getElementById('lat-val');
+  const lonEl = document.getElementById('lon-val');
+  if (latEl) latEl.innerText = lat.toFixed(6);
+  if (lonEl) lonEl.innerText = lon.toFixed(6);
 }
 
 /* ----------------------------------------------------
