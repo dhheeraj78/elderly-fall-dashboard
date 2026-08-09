@@ -3,10 +3,24 @@
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
+#include "nvs_flash.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_netif.h"
+#include "esp_http_client.h"
+#include "esp_crt_bundle.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
+
+#define WIFI_SSID      "Dhheeraj's mobile"
+#define WIFI_PASS      "onetwoeight"
+#define FIREBASE_URL   "https://elderly-fall-detection-a0f34-default-rtdb.firebaseio.com"
+
+#define WIFI_CONNECTED_BIT BIT0
+static EventGroupHandle_t wifi_event_group;
 
 #define I2C_MASTER_SDA_IO 21
 #define I2C_MASTER_SCL_IO 22
@@ -353,11 +367,120 @@ void uart_gps_init(void) {
     uart_driver_install(UART_GPS_NUM, 1024, 0, 0, NULL, 0);
     ESP_LOGI(TAG, "UART2 GPS initialized successfully.");
 }
+/* ----------------------------------------------------
+   WIFI & FIREBASE HTTP CLIENT
+   ---------------------------------------------------- */
+static void wifi_event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        esp_wifi_connect();
+        ESP_LOGI(TAG, "Retry to connect to the AP");
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+        xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
+    }
+}
 
+void wifi_init_sta(void) {
+    wifi_event_group = xEventGroupCreate();
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_sta();
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    esp_event_handler_instance_t instance_any_id;
+    esp_event_handler_instance_t instance_got_ip;
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, &instance_any_id));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL, &instance_got_ip));
+
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASS,
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+        },
+    };
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    ESP_LOGI(TAG, "wifi_init_sta finished.");
+}
+
+void post_to_firebase(const char* status_str, float total_g, float gps_lat, float gps_lon, int hr_val, int spo2_val, int battery_val) {
+    // Check if connected
+    if (wifi_event_group == NULL) return;
+    EventBits_t bits = xEventGroupGetBits(wifi_event_group);
+    if (!(bits & WIFI_CONNECTED_BIT)) {
+        return; // Not connected
+    }
+
+    // Include timestamp by simply using ISO 8601 representation via JS in the dashboard later if not strictly needed here, 
+    // or let the node provide it. We'll simply let Firebase update without explicit timestamp or add one.
+    // For simplicity, omitting timestamp from C code if no time sync (SNTP) is available.
+    // Dashboard app.js handles `new Date().toISOString()` when timestamp is absent.
+
+    char payload[256];
+    snprintf(payload, sizeof(payload), 
+             "{\"status\": \"%s\", \"impact\": %.2f, \"lat\": %.6f, \"lon\": %.6f, \"hr\": %d, \"spO2\": %d, \"battery\": %d}",
+             status_str, total_g, gps_lat, gps_lon, hr_val, spo2_val, battery_val);
+
+    esp_http_client_config_t config = {
+        .url = FIREBASE_URL "/telemetry/live.json",
+        .transport_type = HTTP_TRANSPORT_OVER_SSL,
+        .crt_bundle_attach = esp_crt_bundle_attach,
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+    if (client == NULL) return;
+    
+    esp_http_client_set_method(client, HTTP_METHOD_PATCH);
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+    esp_http_client_set_post_field(client, payload, strlen(payload));
+
+    esp_err_t err = esp_http_client_perform(client);
+    if (err == ESP_OK) {
+        ESP_LOGI(TAG, "Telemetry PATCH Status = %d", esp_http_client_get_status_code(client));
+    } else {
+        ESP_LOGE(TAG, "Telemetry PATCH request failed: %s", esp_err_to_name(err));
+    }
+    esp_http_client_cleanup(client);
+    
+    // If it's a fall detection, POST to incidents
+    if (strcmp(status_str, "FALL DETECTED!") == 0) {
+        config.url = FIREBASE_URL "/incidents.json";
+        client = esp_http_client_init(&config);
+        if (client) {
+            esp_http_client_set_method(client, HTTP_METHOD_POST);
+            esp_http_client_set_header(client, "Content-Type", "application/json");
+            esp_http_client_set_post_field(client, payload, strlen(payload));
+            esp_err_t err2 = esp_http_client_perform(client);
+            if (err2 == ESP_OK) {
+                ESP_LOGI(TAG, "Incident POST Status = %d", esp_http_client_get_status_code(client));
+            } else {
+                 ESP_LOGE(TAG, "Incident POST request failed: %s", esp_err_to_name(err2));
+            }
+            esp_http_client_cleanup(client);
+        }
+    }
+}
 /* ----------------------------------------------------
    MAIN RUN
    ---------------------------------------------------- */
 void app_main(void) {
+    // Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
+    wifi_init_sta();
+
     i2c_master_init();
     uart_gps_init();
 
@@ -479,6 +602,9 @@ void app_main(void) {
         // 6. Logging Telemetry to Serial (to feed Node Backend receiver)
         ESP_LOGI(TAG, "Data - Status: %s, Impact: %.2f, Lat: %.6f, Lon: %.6f, HR: %d, SpO2: %d", 
                  status_str, total_g, gps_lat, gps_lon, hr_val, spo2_val);
+                 
+        // POST to Firebase directly over WiFi
+        post_to_firebase(status_str, total_g, gps_lat, gps_lon, hr_val, spo2_val, battery_val);
 
         // Simulate slow battery drain
         if (rand() % 100 < 5) {
