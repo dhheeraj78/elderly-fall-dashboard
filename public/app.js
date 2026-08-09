@@ -124,6 +124,19 @@ function updateMapCoords(lat, lon) {
   const lonEl = document.getElementById('lon-val');
   if (latEl) latEl.innerText = lat.toFixed(6);
   if (lonEl) lonEl.innerText = lon.toFixed(6);
+
+  // Update GPS satellite lock indicator
+  const lockEl = document.getElementById('gps-lock-status');
+  if (lockEl) {
+    const isDefault = (Math.abs(lat - 12.9716) < 0.0001 && Math.abs(lon - 77.5946) < 0.001);
+    if (isDefault || (lat === 0 && lon === 0)) {
+      lockEl.innerText = 'Awaiting Lock';
+      lockEl.style.color = 'var(--warning-amber)';
+    } else {
+      lockEl.innerText = 'Active Lock';
+      lockEl.style.color = 'var(--safe-green)';
+    }
+  }
 }
 
 /* ----------------------------------------------------
