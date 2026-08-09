@@ -225,6 +225,16 @@ function connectTelemetryFirebase() {
   liveRef.on('value', (snapshot) => {
     const data = snapshot.val();
     if (data) {
+      // Check if data is fresh (within the last 30 seconds)
+      const dataTimestamp = data.timestamp ? new Date(data.timestamp).getTime() : 0;
+      const now = Date.now();
+      const STALE_THRESHOLD_MS = 30 * 1000; // 30 seconds
+
+      if (now - dataTimestamp > STALE_THRESHOLD_MS) {
+        console.log('Firebase data is stale (older than 30s), showing defaults.');
+        return; // Skip rendering stale data
+      }
+
       console.log('Firebase telemetry update received:', data);
       const formattedData = {
         status: data.status,
