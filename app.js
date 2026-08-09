@@ -7,6 +7,19 @@
 let audioCtx = null;
 let sirenInterval = null;
 
+// Firebase App Initialization Compat
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 // Leaflet Map state variables
 let map = null;
 let marker = null;
@@ -34,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTabs();
   initECGSparkline();
   registerPWAComponents();
-  connectTelemetrySSE();
+  connectTelemetryFirebase();
   setupActionListeners();
   renderNotifications();
 });
@@ -203,45 +216,72 @@ function initECGSparkline() {
 }
 
 /* ----------------------------------------------------
-   REALTIME TELEMETRY LISTENER (SSE Streams)
+   REALTIME TELEMETRY LISTENER (Firebase Cloud RTDB)
 ---------------------------------------------------- */
-function connectTelemetrySSE() {
-  const currentHost = window.location.origin;
-  const eventSource = new EventSource(`${currentHost}/api/events`);
-  
-  eventSource.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      console.log('SSE Stream telemetry update received:', data);
-      renderTelemetry(data);
-    } catch (err) {
-      console.error('Error parsing SSE event data:', err);
+function connectTelemetryFirebase() {
+  // 1. Listen for live telemetry
+  const liveRef = db.ref('telemetry/live');
+  liveRef.on('value', (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      console.log('Firebase telemetry update received:', data);
+      const formattedData = {
+        status: data.status,
+        impact: data.impact,
+        lat: data.lat,
+        lon: data.lon,
+        hr: data.hr,
+        spo2: typeof data.spO2 === 'number' ? data.spO2 : data.spo2,
+        spO2: typeof data.spO2 === 'number' ? data.spO2 : data.spo2,
+        battery: data.battery,
+        connectionStatus: "Connected",
+        lastUpdated: data.timestamp || data.lastUpdated || new Date().toISOString()
+      };
+      renderTelemetry(formattedData);
     }
-  };
+  });
 
-  eventSource.onerror = (err) => {
-    console.warn('SSE connection failed. Server might be restarting or client is connectionless. Attempting automatic fallback polling...');
-    eventSource.close();
+  // 2. Listen for incidents database node and populate history timeline
+  const incidentsRef = db.ref('incidents');
+  incidentsRef.on('value', (snapshot) => {
+    const incidentsData = snapshot.val();
+    const logsContainer = document.getElementById('logs-list-container');
+    if (!logsContainer) return;
     
-    // Start polling fallback if SSE disconnects
-    setTimeout(startPollingFallback, 3000);
-  };
-}
-
-function startPollingFallback() {
-  console.log('Polling fallback initiated...');
-  const poll = async () => {
-    try {
-      const res = await fetch('/api/status');
-      const data = await res.json();
-      renderTelemetry(data);
-    } catch (e) {
-      console.error('Polling tick failed:', e);
+    logsContainer.innerHTML = '';
+    if (!incidentsData) {
+      logsContainer.innerHTML = '<div class="empty-state">No incidents logged currently.</div>';
+      return;
     }
-  };
-  
-  poll();
-  setInterval(poll, 4000);
+
+    // Sort and list incidents from newest at top
+    Object.keys(incidentsData).forEach((key) => {
+      const item = incidentsData[key];
+      const logId = `log-${key}`;
+      const logItem = document.createElement('div');
+      
+      const isCancelled = item.status === 'NORMAL';
+      logItem.className = isCancelled ? 'log-item' : 'log-item incident';
+      logItem.id = logId;
+
+      const date = item.timestamp ? new Date(item.timestamp) : new Date();
+      const badgeClass = isCancelled ? 'log-badge badge-clear' : 'log-badge badge-alert';
+      const badgeText = isCancelled ? 'Cancelled' : 'Alert Mode';
+      const titleText = isCancelled ? 'Incident Cleared' : 'Critical fall detected';
+
+      logItem.innerHTML = `
+        <div class="log-info-left">
+          <span class="log-title">${titleText}</span>
+          <span class="log-sub">Impact force: ${(item.impact || 0.0).toFixed(1)}G | GPS status active</span>
+        </div>
+        <div class="log-meta-right">
+          <span class="${badgeClass}">${badgeText}</span>
+          <span class="log-time">${date.toLocaleTimeString()}</span>
+        </div>
+      `;
+      logsContainer.prepend(logItem);
+    });
+  });
 }
 
 function renderTelemetry(data) {
@@ -440,18 +480,21 @@ function setupActionListeners() {
   // Client cancellation of Fall (False Alarm)
   document.getElementById('cancel-emergency-btn').addEventListener('click', async () => {
     try {
-      const res = await fetch('/api/clear', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      const resData = await res.json();
-      console.log('Incident cleared successfully:', resData);
+      // Update status to NORMAL in raw Firebase
+      await db.ref('telemetry/live').update({ status: 'NORMAL' });
       
-      // Update UI log entry list mapping to "False Alarm (Cancelled)"
-      updateLogIncidentToCancelled();
+      // Also update last incident status to NORMAL/Cancelled if we have history
+      db.ref('incidents').limitToLast(1).once('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const key = Object.keys(data)[0];
+          db.ref(`incidents/${key}`).update({ status: 'NORMAL' });
+        }
+      });
+
       closeEmergencyModal();
     } catch (e) {
-      console.error('Failed to notify node on cleared fall status:', e);
+      console.error('Resetting state on Firebase failed:', e);
       closeEmergencyModal(); // force local dismissal
     }
   });
@@ -578,15 +621,20 @@ function setupActionListeners() {
 
 async function triggerSimulatedTelemetry(payload) {
   try {
-    const res = await fetch('/api/alert', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const result = await res.json();
-    console.log('Simulated telemetry payload submitted:', result);
+    // Convert spo2 key to spO2 for Firebase REST consistency
+    if (payload.hasOwnProperty('spo2')) {
+      payload.spO2 = payload.spo2;
+      delete payload.spo2;
+    }
+    payload.timestamp = new Date().toISOString();
+    
+    await db.ref('telemetry/live').update(payload);
+    
+    if (payload.status === 'FALL_DETECTED') {
+      await db.ref('incidents').push(payload);
+    }
   } catch (err) {
-    console.error('Call failed during hardware telemetry simulation dispatch:', err);
+    console.error('Firebase simulation dispatch error:', err);
   }
 }
 
