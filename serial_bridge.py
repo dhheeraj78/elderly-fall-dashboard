@@ -3,10 +3,11 @@ import re
 import requests
 import json
 import time
+import datetime
 
 PORT = '/dev/tty.usbserial-0001'
 BAUD = 115200
-URL = 'http://localhost:3000/api/alert'
+FIREBASE_DB_URL = 'https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com'
 
 print(f"Starting Serial Bridge on {PORT}...")
 
@@ -33,23 +34,37 @@ while True:
                         data = match.groupdict()
                         status_raw = data['status'].strip()
                         status = "FALL_DETECTED" if "FALL" in status_raw else "NORMAL"
+                        timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                        
                         payload = {
                             "status": status,
                             "impact": float(data['impact']),
                             "lat": float(data['lat']),
                             "lon": float(data['lon']),
                             "hr": int(data['hr']),
-                            "spo2": int(data['spo2']),
-                            "ax": 0.05,
-                            "ay": -0.05,
-                            "az": float(data['impact'])
+                            "spO2": int(data['spo2']),
+                            "battery": 89,
+                            "timestamp": timestamp
                         }
-                        print(f"Sending payload: {payload}")
+                        
+                        # 1. Update live telemetry state via HTTP PATCH
+                        live_url = f"{FIREBASE_DB_URL}/telemetry/live.json"
+                        print(f"PATCHing live telemetry: {payload}")
                         try:
-                            r = requests.post(URL, json=payload, timeout=2)
-                            print(f"Response: {r.status_code} - {r.text}")
+                            r_live = requests.patch(live_url, json=payload, timeout=2)
+                            print(f"Firebase Match Response: {r_live.status_code}")
                         except Exception as req_err:
-                            print(f"HTTP Post Error: {req_err}")
+                            print(f"Firebase PATCH Error: {req_err}")
+                        
+                        # 2. When a fall occurs, POST the incident record
+                        if status == "FALL_DETECTED":
+                            incidents_url = f"{FIREBASE_DB_URL}/incidents.json"
+                            print("Fall incident detected! POSTing event record to Firebase...")
+                            try:
+                                r_inc = requests.post(incidents_url, json=payload, timeout=2)
+                                print(f"Firebase Incident Response: {r_inc.status_code}")
+                            except Exception as req_err:
+                                print(f"Firebase POST Error: {req_err}")
     except Exception as e:
         print(f"Serial connection lost or error: {e}. Retrying in 3 seconds...")
         time.sleep(3)
