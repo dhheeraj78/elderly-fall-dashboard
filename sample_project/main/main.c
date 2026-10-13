@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define WIFI_SSID      "Dhheeraj's mobile"
+#define WIFI_SSID      "Dhheeraj"
 #define WIFI_PASS      "onetwoeight"
 #define FIREBASE_URL   "https://elderly-fall-detection-a0f34-default-rtdb.firebaseio.com"
 
@@ -426,7 +426,7 @@ void post_to_firebase(const char* status_str, float total_g, float gps_lat, floa
 
     char payload[256];
     snprintf(payload, sizeof(payload), 
-             "{\"status\": \"%s\", \"impact\": %.2f, \"lat\": %.6f, \"lon\": %.6f, \"hr\": %d, \"spO2\": %d, \"battery\": %d}",
+             "{\"status\": \"%s\", \"impact\": %.2f, \"lat\": %.6f, \"lon\": %.6f, \"hr\": %d, \"spO2\": %d, \"battery\": %d, \"timestamp\": {\".sv\": \"timestamp\"}}",
              status_str, total_g, gps_lat, gps_lon, hr_val, spo2_val, battery_val);
 
     esp_http_client_config_t config = {

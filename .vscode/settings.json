@@ -1,0 +1,5 @@
+{
+    "idf.currentSetup": "/Users/kodevenkatdhheeraj/.espressif/v5.2.7/esp-idf",
+    "idf.port": "/dev/tty.usbserial-0001",
+    "idf.buildPath": "${workspaceFolder}/sample_project/build"
+}

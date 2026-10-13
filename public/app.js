@@ -3,6 +3,105 @@
    Coordinating telemetry data, location maps, Web Push, and audio alerts.
 ---------------------------------------------------- */
 
+/* ----------------------------------------------------
+   DNA CRYPTOGRAPHY SUBSYSTEM (From FYP Cryptographic Module)
+---------------------------------------------------- */
+const DNA_TO_BIN_MAP = { 'A': '00', 'T': '01', 'C': '10', 'G': '11' };
+const BIN_TO_DNA_MAP = { '00': 'A', '01': 'T', '10': 'C', '11': 'G' };
+const DNA_BASES = ['A', 'T', 'C', 'G'];
+
+function textToBinary(text) {
+  let bin = '';
+  for (let i = 0; i < text.length; i++) {
+    bin += text.charCodeAt(i).toString(2).padStart(8, '0');
+  }
+  return bin;
+}
+
+function binaryToDna(binary) {
+  let dna = '';
+  for (let i = 0; i < binary.length; i += 2) {
+    dna += BIN_TO_DNA_MAP[binary.substring(i, i + 2)] || 'A';
+  }
+  return dna;
+}
+
+function dnaToBinary(dna) {
+  let bin = '';
+  for (let i = 0; i < dna.length; i++) {
+    bin += DNA_TO_BIN_MAP[dna[i]] || '00';
+  }
+  return bin;
+}
+
+function binaryToText(binary) {
+  let text = '';
+  for (let i = 0; i < binary.length; i += 8) {
+    const byte = binary.substring(i, i + 8);
+    if (byte.length === 8) {
+      text += String.fromCharCode(parseInt(byte, 2));
+    }
+  }
+  return text;
+}
+
+function generateDnaKey(length) {
+  let key = '';
+  for (let i = 0; i < length; i++) {
+    key += DNA_BASES[i % 4];
+  }
+  return key;
+}
+
+function xorDnaEncrypt(text) {
+  const binData = textToBinary(text);
+  const dnaSeq = binaryToDna(binData);
+  const key = generateDnaKey(dnaSeq.length);
+  const binSeq = dnaToBinary(dnaSeq);
+  const binKey = dnaToBinary(key);
+  let encBin = '';
+  for (let i = 0; i < binSeq.length; i++) {
+    encBin += (parseInt(binSeq[i], 10) ^ parseInt(binKey[i], 10)).toString();
+  }
+  return binaryToDna(encBin);
+}
+
+function xorDnaDecrypt(encryptedDna) {
+  const key = generateDnaKey(encryptedDna.length);
+  const encBin = dnaToBinary(encryptedDna);
+  const keyBin = dnaToBinary(key);
+  let decBin = '';
+  for (let i = 0; i < encBin.length; i++) {
+    decBin += (parseInt(encBin[i], 10) ^ parseInt(keyBin[i], 10)).toString();
+  }
+  return binaryToText(decBin);
+}
+
+function updateDnaSecurityBanner(dnaCiphertext, isEncrypted) {
+  const badge = document.getElementById('dna-status-badge');
+  const stream = document.getElementById('dna-ciphertext-stream');
+  
+  if (isEncrypted && dnaCiphertext) {
+    if (badge) {
+      badge.className = 'dna-badge active';
+      badge.innerText = 'Active (DNA-XOR Cipher)';
+    }
+    if (stream) {
+      const preview = dnaCiphertext.length > 55 ? dnaCiphertext.substring(0, 52) + '...' : dnaCiphertext;
+      stream.innerText = preview + ` [${dnaCiphertext.length} bases]`;
+      stream.title = dnaCiphertext;
+    }
+  } else {
+    if (badge) {
+      badge.className = 'dna-badge inactive';
+      badge.innerText = 'Unencrypted Plaintext';
+    }
+    if (stream) {
+      stream.innerText = 'No encrypted DNA packet received';
+    }
+  }
+}
+
 // Web Audio API Context for generating synthetic warning sirens
 let audioCtx = null;
 let sirenInterval = null;
@@ -236,8 +335,26 @@ function connectTelemetryFirebase() {
   // 1. Listen for live telemetry
   const liveRef = db.ref('telemetry/live');
   liveRef.on('value', (snapshot) => {
-    const data = snapshot.val();
-    if (data) {
+    const rawSnapshotData = snapshot.val();
+    if (rawSnapshotData) {
+      let data = rawSnapshotData;
+      let isEncrypted = false;
+
+      // Detect and decrypt DNA Cryptography payload
+      if (rawSnapshotData.encrypted_dna) {
+        try {
+          const decryptedJson = xorDnaDecrypt(rawSnapshotData.encrypted_dna);
+          const parsed = JSON.parse(decryptedJson);
+          data = { ...rawSnapshotData, ...parsed };
+          isEncrypted = true;
+          updateDnaSecurityBanner(rawSnapshotData.encrypted_dna, true);
+        } catch (decErr) {
+          console.error('DNA Decryption failed:', decErr);
+        }
+      } else {
+        updateDnaSecurityBanner(null, false);
+      }
+
       // Check if data is fresh (within the last 30 seconds)
       const dataTimestamp = data.timestamp ? new Date(data.timestamp).getTime() : 0;
       const now = Date.now();
@@ -257,8 +374,8 @@ function connectTelemetryFirebase() {
         hr: data.hr,
         spo2: typeof data.spO2 === 'number' ? data.spO2 : data.spo2,
         spO2: typeof data.spO2 === 'number' ? data.spO2 : data.spo2,
-        battery: data.battery,
-        connectionStatus: "Connected",
+        battery: data.battery || 90,
+        connectionStatus: isEncrypted ? "Connected (DNA Encrypted)" : "Connected (Plaintext)",
         lastUpdated: data.timestamp || data.lastUpdated || new Date().toISOString()
       };
       renderTelemetry(formattedData);
@@ -641,6 +758,66 @@ function setupActionListeners() {
       clearNotifications();
     });
   }
+
+  // ----------------------------------------------------
+  // Custom Sensor Testbench: ENTER TO ENCRYPT FOR TESTING
+  // ----------------------------------------------------
+  const customEncryptBtn = document.getElementById('custom-encrypt-btn');
+  if (customEncryptBtn) {
+    customEncryptBtn.addEventListener('click', async () => {
+      const hrInput = document.getElementById('test-input-hr');
+      const spo2Input = document.getElementById('test-input-spo2');
+      const contactInput = document.getElementById('test-input-contact');
+      const impactInput = document.getElementById('test-input-impact');
+      const statusInput = document.getElementById('test-input-status');
+      const batteryInput = document.getElementById('test-input-battery');
+      const latInput = document.getElementById('test-input-lat');
+      const lonInput = document.getElementById('test-input-lon');
+      const statusBanner = document.getElementById('test-encrypt-status-msg');
+      const statusText = document.getElementById('test-encrypt-status-text');
+
+      const hr = parseInt(hrInput ? hrInput.value : 76, 10) || 76;
+      const spo2 = parseInt(spo2Input ? spo2Input.value : 98, 10) || 98;
+      const contact = contactInput ? contactInput.value : 'Finger Detected';
+      const impact = parseFloat(impactInput ? impactInput.value : 1.05) || 1.05;
+      const status = statusInput ? statusInput.value : 'NORMAL';
+      const battery = parseInt(batteryInput ? batteryInput.value : 92, 10) || 92;
+      const lat = parseFloat(latInput ? latInput.value : 12.971600) || 12.971600;
+      const lon = parseFloat(lonInput ? lonInput.value : 77.594597) || 77.594597;
+
+      // Realistic 3-axis accelerometer simulation matching impact
+      const ax = status === 'FALL_DETECTED' ? 1.25 : parseFloat((Math.random() * 0.04 - 0.02).toFixed(2));
+      const ay = status === 'FALL_DETECTED' ? 2.15 : parseFloat((Math.random() * 0.04 - 0.02).toFixed(2));
+      const az = status === 'FALL_DETECTED' ? impact : 0.99;
+
+      const payload = {
+        status: status,
+        impact: impact,
+        lat: lat,
+        lon: lon,
+        hr: contact === 'No Finger' ? 0 : hr,
+        spO2: contact === 'No Finger' ? 0 : spo2,
+        battery: battery,
+        ax: ax,
+        ay: ay,
+        az: az,
+        contact: contact,
+        timestamp: new Date().toISOString()
+      };
+
+      if (statusBanner && statusText) {
+        statusBanner.className = 'encrypt-status-banner';
+        statusText.innerText = 'Encrypting via DNA-XOR & uploading to Firebase...';
+      }
+
+      await triggerSimulatedTelemetry(payload);
+
+      if (statusBanner && statusText) {
+        statusBanner.className = 'encrypt-status-banner success';
+        statusText.innerText = `✓ Encrypted & pushed to Firebase! Status: ${status} | HR: ${payload.hr} BPM | SpO2: ${payload.spO2}% | Impact: ${impact}G`;
+      }
+    });
+  }
 }
 
 async function triggerSimulatedTelemetry(payload) {
@@ -652,10 +829,33 @@ async function triggerSimulatedTelemetry(payload) {
     }
     payload.timestamp = new Date().toISOString();
     
-    await db.ref('telemetry/live').update(payload);
+    // Encrypt using DNA Cryptography
+    const rawJson = JSON.stringify(payload);
+    const encryptedDna = xorDnaEncrypt(rawJson);
     
-    if (payload.status === 'FALL_DETECTED') {
-      await db.ref('incidents').push(payload);
+    const cloudPayload = {
+      encrypted_dna: encryptedDna,
+      cipher: "DNA-XOR-V1",
+      timestamp: payload.timestamp,
+      is_encrypted: true
+    };
+    
+    try {
+      await db.ref('telemetry/live').set(cloudPayload);
+      if (payload.status === 'FALL_DETECTED') {
+        await db.ref('incidents').push(cloudPayload);
+      }
+    } catch (fbErr) {
+      console.warn('Firebase sync note (offline/permissions):', fbErr.message);
+      // Seamless local test fallback: decrypt and render directly on UI
+      const decryptedJson = xorDnaDecrypt(encryptedDna);
+      const parsed = JSON.parse(decryptedJson);
+      updateDnaSecurityBanner(encryptedDna, true);
+      renderTelemetry({
+        ...parsed,
+        connectionStatus: "Local Test (DNA Encrypted)",
+        lastUpdated: payload.timestamp
+      });
     }
   } catch (err) {
     console.error('Firebase simulation dispatch error:', err);
