@@ -84,6 +84,19 @@
       </div>
     </header>
 
+    <!-- DNA Cryptography Security Layer Status Bar -->
+    <div class="dna-security-bar" id="dna-security-bar">
+      <div class="dna-sec-status">
+        <span class="dna-icon">&#129516;</span>
+        <span class="dna-title">DNA Cryptography Security:</span>
+        <span class="dna-badge active" id="dna-status-badge">Active (DNA-XOR Cipher)</span>
+      </div>
+      <div class="dna-preview-box">
+        <span class="dna-preview-label">Cloud Ciphertext:</span>
+        <span class="dna-stream-mono" id="dna-ciphertext-stream">Awaiting encrypted DNA packet...</span>
+      </div>
+    </div>
+
     <!-- Main Workspace: Console & Grid Viewports -->
     <main class="console-workspace">
       
@@ -205,6 +218,109 @@
         </section>
         
       </div><!-- End metrics-grid -->
+
+      <!-- THREE COLUMN SENSOR TESTBENCH: ENTER TO ENCRYPT FOR TESTING -->
+      <section class="console-card test-encrypt-panel" id="test-encrypt-section">
+        <header class="card-title-bar test-panel-header">
+          <div class="panel-header-title-wrap">
+            <span class="test-header-icon">&#129516;</span>
+            <h3>ENTER TO ENCRYPT FOR TESTING</h3>
+          </div>
+          <span class="feed-tag font-mono test-badge-tag">DNA CLOUD DISPATCHER</span>
+        </header>
+        <div class="test-panel-body">
+          <p class="test-panel-desc">
+            Provide custom real-time sensor parameters below. Clicking <strong>ENCRYPT & PUSH TO FIREBASE</strong> encodes the telemetry, applies the DNA-XOR cipher, and stores the encrypted DNA string live in Firebase Realtime Database.
+          </p>
+          <div class="three-col-input-bar">
+            
+            <!-- Column 1: Biometrical Sensors (MAX30100) -->
+            <div class="test-input-col">
+              <div class="col-header-label">
+                <span class="col-dot dot-emerald"></span>
+                <span>BIOMETRICAL SENSORS (MAX30100)</span>
+              </div>
+              <div class="input-field-item">
+                <label for="test-input-hr">Heart Pulse Rate (BPM)</label>
+                <div class="input-with-unit">
+                  <input type="number" id="test-input-hr" class="test-input-box font-mono" value="76" min="30" max="220">
+                  <span class="input-unit">BPM</span>
+                </div>
+              </div>
+              <div class="input-field-item">
+                <label for="test-input-spo2">Oxygen Saturation (SpO2)</label>
+                <div class="input-with-unit">
+                  <input type="number" id="test-input-spo2" class="test-input-box font-mono" value="98" min="50" max="100">
+                  <span class="input-unit">%</span>
+                </div>
+              </div>
+              <div class="input-field-item">
+                <label for="test-input-contact">Optical Sensor Contact</label>
+                <select id="test-input-contact" class="test-input-box">
+                  <option value="Finger Detected">Finger Detected</option>
+                  <option value="No Finger">No Finger</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Column 2: Motion & Impact Sensors (MPU6050) -->
+            <div class="test-input-col">
+              <div class="col-header-label">
+                <span class="col-dot dot-amber"></span>
+                <span>MOTION & ACCEL (MPU6050)</span>
+              </div>
+              <div class="input-field-item">
+                <label for="test-input-impact">Impact Force Threshold</label>
+                <div class="input-with-unit">
+                  <input type="number" step="0.05" id="test-input-impact" class="test-input-box font-mono" value="1.05" min="0" max="15">
+                  <span class="input-unit">G</span>
+                </div>
+              </div>
+              <div class="input-field-item">
+                <label for="test-input-status">Device Health / Fall State</label>
+                <select id="test-input-status" class="test-input-box">
+                  <option value="NORMAL">NORMAL (Safe & Stable)</option>
+                  <option value="FALL_DETECTED">FALL_DETECTED (Emergency Fall Alert)</option>
+                </select>
+              </div>
+              <div class="input-field-item">
+                <label for="test-input-battery">Module Battery Level</label>
+                <div class="input-with-unit">
+                  <input type="number" id="test-input-battery" class="test-input-box font-mono" value="92" min="1" max="100">
+                  <span class="input-unit">%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column 3: Geolocation (NEO-6M GPS) & Encrypt Trigger -->
+            <div class="test-input-col col-action">
+              <div class="col-header-label">
+                <span class="col-dot dot-blue"></span>
+                <span>GEOLOCATION (NEO-6M GPS)</span>
+              </div>
+              <div class="input-field-item">
+                <label for="test-input-lat">Latitude Coordinate</label>
+                <input type="number" step="0.000001" id="test-input-lat" class="test-input-box font-mono" value="12.971600">
+              </div>
+              <div class="input-field-item">
+                <label for="test-input-lon">Longitude Coordinate</label>
+                <input type="number" step="0.000001" id="test-input-lon" class="test-input-box font-mono" value="77.594597">
+              </div>
+              <div class="test-encrypt-action-wrap">
+                <button type="button" class="encrypt-submit-action-btn" id="custom-encrypt-btn">
+                  <span class="btn-lock-icon">&#128274;</span>
+                  <span>ENCRYPT &amp; PUSH TO FIREBASE</span>
+                </button>
+                <div class="encrypt-status-banner" id="test-encrypt-status-msg">
+                  <span class="status-indicator-dot"></span>
+                  <span id="test-encrypt-status-text">Ready for sensor parameters</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
 
       <!-- LOCATION PANEL: GPS coordinates display & Leaflet track map -->
       <section class="gps-location-panel">

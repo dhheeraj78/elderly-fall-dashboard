@@ -984,3 +984,308 @@ body {
 .save-profile-btn:hover {
   opacity: 0.9;
 }
+
+/* ----------------------------------------------------
+   DNA Cryptography Security Layer Banner
+---------------------------------------------------- */
+.dna-security-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f1f5f9;
+  border-bottom: 1px solid var(--border-slate);
+  padding: 8px 24px;
+  font-size: 13px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dna-sec-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dna-icon {
+  font-size: 16px;
+}
+
+.dna-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dna-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dna-badge.active {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.dna-badge.inactive {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.dna-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-slate);
+  font-size: 12px;
+}
+
+.dna-preview-label {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.dna-stream-mono {
+  font-family: var(--font-mono);
+  color: #0369a1;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  max-width: 440px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ----------------------------------------------------
+   ENTER TO ENCRYPT FOR TESTING - 3-COLUMN SENSOR BAR
+---------------------------------------------------- */
+.test-encrypt-panel {
+  margin-top: 18px;
+  margin-bottom: 18px;
+  background-color: var(--surface-white);
+  border: 1px solid var(--border-slate);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+
+.test-panel-header {
+  background: linear-gradient(90deg, #f8fafc 0%, #f1f5f9 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-slate);
+  padding: 12px 18px;
+}
+
+.panel-header-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.test-header-icon {
+  font-size: 18px;
+}
+
+.test-panel-header h3 {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.test-badge-tag {
+  background-color: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+
+.test-panel-body {
+  padding: 16px 18px 20px;
+}
+
+.test-panel-desc {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.three-col-input-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .three-col-input-bar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.test-input-col {
+  background-color: #f8fafc;
+  border: 1px solid var(--border-slate);
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.col-header-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.06em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-slate);
+}
+
+.col-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-emerald { background-color: #10b981; }
+.dot-amber { background-color: #f59e0b; }
+.dot-blue { background-color: #3b82f6; }
+
+.input-field-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.input-field-item label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.test-input-box {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  background-color: #ffffff;
+  border: 1px solid var(--border-slate);
+  border-radius: 4px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.test-input-box:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+.input-with-unit {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-with-unit input {
+  padding-right: 44px;
+}
+
+.input-unit {
+  position: absolute;
+  right: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.test-encrypt-action-wrap {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.encrypt-submit-action-btn {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 5px;
+  padding: 12px 14px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+  transition: all 0.2s ease;
+}
+
+.encrypt-submit-action-btn:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4);
+  transform: translateY(-1px);
+}
+
+.encrypt-submit-action-btn:active {
+  transform: translateY(0);
+}
+
+.btn-lock-icon {
+  font-size: 14px;
+}
+
+.encrypt-status-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #ffffff;
+  border: 1px solid var(--border-slate);
+  border-radius: 4px;
+  padding: 7px 10px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.encrypt-status-banner .status-indicator-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.encrypt-status-banner.success .status-indicator-dot {
+  background-color: #10b981;
+}
+
+.encrypt-status-banner.success {
+  background-color: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
+  font-weight: 600;
+}
+
+
