@@ -13,3 +13,13 @@ __pycache__/
 sample_project/.cache/
 sample_project/build/
 venv/
+
+# Secrets, Sensitive Keys & Environment Variables (Checklist Item 3)
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+*serviceAccount*.json
+server/.vapid.json
+public_legacy_backup/

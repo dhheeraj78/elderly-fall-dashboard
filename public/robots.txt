@@ -1,0 +1,17 @@
+# ElderCare IoT Telemetry Portal - Production robots.txt
+# Disallow indexing of real-time private patient telemetry feeds and API webhooks
+
+User-agent: *
+Disallow: /patient/
+Disallow: /telemetry/
+Disallow: /api/
+Disallow: /incidents/
+
+# Allow root index, privacy policy, terms, and offline assets
+Allow: /
+Allow: /privacy
+Allow: /terms
+Allow: /sitemap.xml
+Allow: /favicon.svg
+
+Sitemap: https://eldercare-telemetry.health/sitemap.xml

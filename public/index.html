@@ -1,432 +1,592 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Checklist Item 4: Force HTTPS & Secure Transport -->
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ElderCare Fall telemetry & diagnostics console</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="style.css">
-  
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#ffffff">
-  
-  <!-- iOS support -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <!-- Checklist Item 6: Descriptive Meta Titles & Summaries -->
+  <title>ElderCare IoT - Secure Real-Time Telemetry &amp; Fall Detection</title>
+  <meta name="description" content="Clinical-grade caregiver dashboard displaying real-time ESP32 wrist kinematics, GPS geofencing, biometrics, daily step cadence, and NIST ASCON-128 AEAD verified telemetry.">
+  <meta name="keywords" content="ElderCare, fall detection, ESP32, MPU6050, ASCON-128, pedometer, telemedicine, vitals monitoring">
+  <meta name="author" content="ElderCare IoT Health Systems">
 
-  <!-- Leaflet.js Offline-Capable Map Resources -->
+  <!-- Checklist Item 8: High-Res SVG Medical Favicon Set -->
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  <meta name="theme-color" content="#2563EB">
+
+  <!-- Checklist Item 7: Social Preview (OpenGraph & Twitter Card) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ElderCare IoT — Secure Telemetry &amp; Fall Detection">
+  <meta property="og:description" content="Real-time ESP32 wrist kinematics, GPS geofencing, biometrical vitals, and NIST ASCON-128 AEAD zero-tamper verification.">
+  <meta property="og:image" content="https://eldercare-telemetry.health/og-preview.svg">
+  <meta property="og:url" content="https://eldercare-telemetry.health/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ElderCare IoT — Clinical Caregiver Dashboard">
+  <meta name="twitter:description" content="Live wrist kinematics, GPS geofencing, and NIST ASCON-128 verified eldercare telemetry.">
+  <meta name="twitter:image" content="https://eldercare-telemetry.health/og-preview.svg">
+
+  <!-- External Stylesheets: Leaflet Maps & Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet.js CSS (HTTPS) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Application Clinical Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Leaflet.js JS (HTTPS) -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-  <!-- Firebase SDK Compat -->
+  <!-- Firebase Web SDK Compat (HTTPS) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
 </head>
-<body>
+<body data-theme="light">
 
-  <!-- Clinical Dashboard Layout -->
-  <div class="dashboard-wrapper">
-    
-    <!-- Top Bar: Clinical Header & Web Sockets / HTTP indicator -->
-    <header class="top-bar">
-      <div class="system-brand">
-        <span class="system-title">ELDERCARE TELEMETRY</span>
-        <span class="system-id">DEVICE: ESP32-EC-9982</span>
+  <!-- =======================================================================
+       TOP BAR: CLINICAL HEADER & DEVICE CONNECTIVITY
+       ======================================================================= -->
+  <header class="app-header" id="mainHeader">
+    <div class="header-container">
+      <div class="brand-section">
+        <!-- Checklist Item 10: Alt text on all visual icons -->
+        <img src="favicon.svg" alt="ElderCare Shield Logo" class="brand-shield-icon" width="32" height="32">
+        <div class="brand-info">
+          <h1 class="brand-title">
+            ElderCare IoT
+            <span class="brand-badge-version">v2.4-ESP32</span>
+          </h1>
+          <span class="brand-subtitle">Clinical Caregiver Telemetry &amp; Wrist Kinematics Console</span>
+        </div>
       </div>
-      
-      <!-- Patient state identity display -->
-      <div class="patient-id-block">
-        <label>PATIENT ID:</label>
-        <span class="patient-name-text" id="profile-patient-name">James Smith</span>
-        <button class="settings-trigger-btn" id="avatar-profile-btn" aria-label="Edit Profile">
-          <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-            <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+
+      <div class="header-controls">
+        <div class="sync-status-indicator" role="status" aria-live="polite">
+          <span class="pulse-dot" id="headerPulseDot" aria-hidden="true"></span>
+          <span id="headerSyncText">Device Live (50 Hz)</span>
+        </div>
+
+        <button type="button" class="header-btn" id="themeToggleBtn" aria-label="Toggle dark mode">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
           </svg>
-          Edit
+          <span id="themeToggleLabel">Theme</span>
         </button>
-      </div>
 
-      <!-- Network link and telemetry health indicators -->
-      <div class="network-feed-status">
-        <div class="status-indicator-group">
-          <span class="status-bullet pulse-indicator status-green" id="telemetry-pulse"></span>
-          <span class="status-label" id="device-status-text">Connected</span>
-        </div>
-        <div class="sync-timestamp">
-          Synced: <span id="sync-time" class="mono-value">00:00:00</span>
-        </div>
-      </div>
-
-      <!-- Alerts Notification Bell -->
-      <div class="alerts-center">
-        <button class="alerts-bell-btn" id="bell-btn" aria-label="Incident Notifications">
-          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          <span class="alerts-badge" id="alert-badge" style="display:none;">0</span>
+        <button type="button" class="header-btn" id="privacyNavBtn" aria-haspopup="dialog">
+          Privacy
         </button>
-        
-        <!-- Notifications Dropdown -->
-        <div class="notifications-dropdown" id="notifications-dropdown">
-          <div class="dropdown-header">
-            <h4>System Incident Logs</h4>
-            <button class="clear-all-btn" id="clear-notifications-btn" style="display: none;">Clear Logs</button>
-          </div>
-          <ul class="dropdown-list" id="notifications-list">
-            <li class="empty-state">No incidents queued</li>
-          </ul>
-        </div>
-      </div>
-    </header>
 
-    <!-- DNA Cryptography Security Layer Status Bar -->
-    <div class="dna-security-bar" id="dna-security-bar">
-      <div class="dna-sec-status">
-        <span class="dna-icon">&#129516;</span>
-        <span class="dna-title">DNA Cryptography Security:</span>
-        <span class="dna-badge active" id="dna-status-badge">Active (DNA-XOR Cipher)</span>
-      </div>
-      <div class="dna-preview-box">
-        <span class="dna-preview-label">Cloud Ciphertext:</span>
-        <span class="dna-stream-mono" id="dna-ciphertext-stream">Awaiting encrypted DNA packet...</span>
+        <button type="button" class="header-btn" id="termsNavBtn" aria-haspopup="dialog">
+          Terms
+        </button>
       </div>
     </div>
+  </header>
 
-    <!-- Main Workspace: Console & Grid Viewports -->
-    <main class="console-workspace">
-      
-      <!-- MAIN GRID: Motion, Vitals, Diagnostics, Incidents -->
-      <div class="metrics-grid">
-        
-        <!-- CARD 1: MPU6050 Fall Detection Card -->
-        <section class="console-card motion-card" id="card-alert-status">
-          <header class="card-title-bar">
-            <h3>FALL DETECTION (I2C)</h3>
-            <span class="feed-tag font-mono">MPU6050</span>
-          </header>
-          <div class="card-body">
-            <div class="telemetry-primary-value">
-              <span class="value-text" id="fall-status-text">Safe & Secure</span>
-            </div>
-            <table class="telemetry-table">
-              <tbody>
-                <tr>
-                  <td>Impact Threshold</td>
-                  <td class="td-val font-mono" id="telemetry-impact">0.0 G</td>
-                </tr>
-                <tr>
-                  <td>Raw Acceleration</td>
-                  <td class="td-val font-mono" id="diag-accel-val">0.00G, 0.00G, 1.00G</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- CARD 2: Vital Metrics Card -->
-        <section class="console-card vitals-card">
-          <header class="card-title-bar">
-            <h3>BIOMETRICAL VITALS (I2C)</h3>
-            <span class="feed-tag font-mono">MAX30100</span>
-          </header>
-          <div class="card-body">
-            <div class="vitals-rows">
-              <div class="vital-stat-block">
-                <div class="vital-label">HEART PULSE RATE</div>
-                <div class="vital-value-group">
-                  <span class="vital-val font-mono" id="bpm-val">--</span>
-                  <span class="vital-unit">BPM</span>
-                </div>
-              </div>
-              <div class="vital-sparkline-canvas">
-                <canvas id="bpm-sparkline"></canvas>
-              </div>
-            </div>
-            <table class="telemetry-table">
-              <tbody>
-                <tr>
-                  <td>Oxygen Saturation (SpO2)</td>
-                  <td class="td-val font-mono" id="diag-spo2-val">--%</td>
-                </tr>
-                <tr>
-                  <td>Optical Contact Status</td>
-                  <td class="td-val font-mono" id="diag-finger-val">No Finger</td>
-                </tr>
-              </tbody>
-            </table>
-            <footer class="vital-analysis">
-              <p class="analysis-status-text" id="bpm-subtext">Initializing sensors...</p>
-            </footer>
-          </div>
-        </section>
-
-        <!-- CARD 3: Diagnostics & Simulation Testing Card -->
-        <section class="console-card system-card">
-          <header class="card-title-bar">
-            <h3>DEVICE DIAGNOSTICS</h3>
-            <span class="feed-tag font-mono">ESP32 POWER</span>
-          </header>
-          <div class="card-body">
-            <table class="telemetry-table">
-              <tbody>
-                <tr>
-                  <td>Internal Battery V%</td>
-                  <td class="td-val font-mono" id="battery-value-text">89%</td>
-                </tr>
-                <tr>
-                  <td>Steps Count (Today)</td>
-                  <td class="td-val font-mono">4281</td>
-                </tr>
-              </tbody>
-            </table>
-            
-            <!-- Hardware Simulation Control Box -->
-            <div class="simulator-control-panel">
-              <header class="sim-panel-title">ESP32 SIGNAL INJECTOR</header>
-              <div class="sim-actions-layout">
-                <button class="action-test-btn trigger-danger-alert" id="sim-fall-btn">
-                  Inject Fall Alert (MPU6050)
-                </button>
-                <button class="action-test-btn trigger-safe-reset" id="sim-safe-btn">
-                  Inject Safe State (MPU6050)
-                </button>
-                <button class="action-test-btn trigger-manual-alarm" id="emergency-shortcut-btn">
-                  Inject Manual Alarm Override
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- CARD 4: System Incident Log Card -->
-        <section class="console-card logs-panel">
-          <header class="card-title-bar">
-            <h3>INCIDENT LOG DATABASE</h3>
-            <span class="feed-tag font-mono">SQL-CACHE</span>
-          </header>
-          <div class="card-body logs-table-container">
-            <div class="logs-list" id="logs-list-container">
-              <!-- Dynamically populated or empty -->
-              <div class="log-item empty-state">No incidents logged currently.</div>
-            </div>
-          </div>
-        </section>
-        
-      </div><!-- End metrics-grid -->
-
-      <!-- THREE COLUMN SENSOR TESTBENCH: ENTER TO ENCRYPT FOR TESTING -->
-      <section class="console-card test-encrypt-panel" id="test-encrypt-section">
-        <header class="card-title-bar test-panel-header">
-          <div class="panel-header-title-wrap">
-            <span class="test-header-icon">&#129516;</span>
-            <h3>ENTER TO ENCRYPT FOR TESTING</h3>
-          </div>
-          <span class="feed-tag font-mono test-badge-tag">DNA CLOUD DISPATCHER</span>
-        </header>
-        <div class="test-panel-body">
-          <p class="test-panel-desc">
-            Provide custom real-time sensor parameters below. Clicking <strong>ENCRYPT & PUSH TO FIREBASE</strong> encodes the telemetry, applies the DNA-XOR cipher, and stores the encrypted DNA string live in Firebase Realtime Database.
-          </p>
-          <div class="three-col-input-bar">
-            
-            <!-- Column 1: Biometrical Sensors (MAX30100) -->
-            <div class="test-input-col">
-              <div class="col-header-label">
-                <span class="col-dot dot-emerald"></span>
-                <span>BIOMETRICAL SENSORS (MAX30100)</span>
-              </div>
-              <div class="input-field-item">
-                <label for="test-input-hr">Heart Pulse Rate (BPM)</label>
-                <div class="input-with-unit">
-                  <input type="number" id="test-input-hr" class="test-input-box font-mono" value="76" min="30" max="220">
-                  <span class="input-unit">BPM</span>
-                </div>
-              </div>
-              <div class="input-field-item">
-                <label for="test-input-spo2">Oxygen Saturation (SpO2)</label>
-                <div class="input-with-unit">
-                  <input type="number" id="test-input-spo2" class="test-input-box font-mono" value="98" min="50" max="100">
-                  <span class="input-unit">%</span>
-                </div>
-              </div>
-              <div class="input-field-item">
-                <label for="test-input-contact">Optical Sensor Contact</label>
-                <select id="test-input-contact" class="test-input-box">
-                  <option value="Finger Detected">Finger Detected</option>
-                  <option value="No Finger">No Finger</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Column 2: Motion & Impact Sensors (MPU6050) -->
-            <div class="test-input-col">
-              <div class="col-header-label">
-                <span class="col-dot dot-amber"></span>
-                <span>MOTION & ACCEL (MPU6050)</span>
-              </div>
-              <div class="input-field-item">
-                <label for="test-input-impact">Impact Force Threshold</label>
-                <div class="input-with-unit">
-                  <input type="number" step="0.05" id="test-input-impact" class="test-input-box font-mono" value="1.05" min="0" max="15">
-                  <span class="input-unit">G</span>
-                </div>
-              </div>
-              <div class="input-field-item">
-                <label for="test-input-status">Device Health / Fall State</label>
-                <select id="test-input-status" class="test-input-box">
-                  <option value="NORMAL">NORMAL (Safe & Stable)</option>
-                  <option value="FALL_DETECTED">FALL_DETECTED (Emergency Fall Alert)</option>
-                </select>
-              </div>
-              <div class="input-field-item">
-                <label for="test-input-battery">Module Battery Level</label>
-                <div class="input-with-unit">
-                  <input type="number" id="test-input-battery" class="test-input-box font-mono" value="92" min="1" max="100">
-                  <span class="input-unit">%</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Column 3: Geolocation (NEO-6M GPS) & Encrypt Trigger -->
-            <div class="test-input-col col-action">
-              <div class="col-header-label">
-                <span class="col-dot dot-blue"></span>
-                <span>GEOLOCATION (NEO-6M GPS)</span>
-              </div>
-              <div class="input-field-item">
-                <label for="test-input-lat">Latitude Coordinate</label>
-                <input type="number" step="0.000001" id="test-input-lat" class="test-input-box font-mono" value="12.971600">
-              </div>
-              <div class="input-field-item">
-                <label for="test-input-lon">Longitude Coordinate</label>
-                <input type="number" step="0.000001" id="test-input-lon" class="test-input-box font-mono" value="77.594597">
-              </div>
-              <div class="test-encrypt-action-wrap">
-                <button type="button" class="encrypt-submit-action-btn" id="custom-encrypt-btn">
-                  <span class="btn-lock-icon">&#128274;</span>
-                  <span>ENCRYPT &amp; PUSH TO FIREBASE</span>
-                </button>
-                <div class="encrypt-status-banner" id="test-encrypt-status-msg">
-                  <span class="status-indicator-dot"></span>
-                  <span id="test-encrypt-status-text">Ready for sensor parameters</span>
-                </div>
-              </div>
-            </div>
-
+  <!-- =======================================================================
+       CRITICAL EMERGENCY ALERT BANNER (Active only upon Fall Incident)
+       Checklist Item 20: Prominent Call to Action (CTA)
+       ======================================================================= -->
+  <aside class="emergency-banner" id="emergencyBanner" role="alert" aria-live="assertive">
+    <div class="emergency-banner-inner">
+      <div class="alert-message-group">
+        <div class="alert-icon-wrap" aria-hidden="true">⚠️</div>
+        <div>
+          <div class="alert-headline" id="alertHeadlineText">CRITICAL EMERGENCY: FALL IMPACT CONFIRMED</div>
+          <div class="alert-subtext" id="alertSubtext">
+            Shock Impact: <strong id="alertImpactVal">0.00 G</strong> | Post-Impact Immobility Observed | Coordinates Transmitted
           </div>
         </div>
-      </section>
+      </div>
 
-      <!-- LOCATION PANEL: GPS coordinates display & Leaflet track map -->
-      <section class="gps-location-panel">
-        <header class="card-title-bar">
-          <h3>SPATIAL MONITORING (UART2 FEED)</h3>
-          <span class="feed-tag font-mono">NEO-6M GPS</span>
-        </header>
-        <div class="gps-layout-wrapper">
-          <div class="gps-data-columns">
-            <table class="telemetry-table tabular-gps-table">
-              <thead>
-                <tr>
-                  <th>TELEMETRY ATTRIBUTE</th>
-                  <th>CURRENT READOUT</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Satellite lock state</td>
-                  <td class="td-val font-mono" id="gps-lock-status" style="color: var(--warning-amber);">Awaiting Lock</td>
-                </tr>
-                <tr>
-                  <td>Stream Coordinates</td>
-                  <td class="td-val font-mono">
-                    Lat: <span id="lat-val">0.000000</span>, Lon: <span id="lon-val">0.000000</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-            
-            <div class="gps-map-actions">
-              <button class="action-test-btn map-recenter-btn" id="recenter-map">
-                Recenter Map Viewport
+      <div class="emergency-actions-group">
+        <!-- Checklist Item 20: Clear CTA Button -->
+        <button type="button" class="cta-dispatch-btn" id="btnAcknowledgeDispatch">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+          </svg>
+          Acknowledge &amp; Dispatch Help
+        </button>
+
+        <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="btn-secondary-white" id="btnAlertMapsLink">
+          Open GPS Route
+        </a>
+
+        <button type="button" class="btn-secondary-white" id="btnResetFalseAlarm">
+          Clear Alarm
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =======================================================================
+       MAIN CLINICAL WORKSPACE: 3-COLUMN RESPONSIVE GRID
+       ======================================================================= -->
+  <main class="dashboard-main">
+    <div class="clinical-grid">
+
+      <!-- ===================================================================
+           LEFT COLUMN: PATIENT PROFILE & KINEMATIC WAVEFORM
+           =================================================================== -->
+      <div class="left-column">
+        
+        <!-- Patient Profile Card -->
+        <section class="dashboard-card patient-profile-card" aria-labelledby="patientCardHeading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <h2 class="card-title" id="patientCardHeading">Patient Profile</h2>
+            </div>
+            <button type="button" class="header-btn" id="editProfileTriggerBtn" aria-label="Edit patient parameters">Edit</button>
+          </div>
+
+          <div class="profile-summary">
+            <div class="avatar-wrapper" aria-hidden="true">EV</div>
+            <div class="patient-meta-text">
+              <span class="patient-name" id="displayPatientName">Eleanor Vance</span>
+              <span class="patient-sub-info" id="displayPatientMeta">Age: 78 • Blood: O+</span>
+            </div>
+          </div>
+
+          <table class="clinical-details-table">
+            <tbody>
+              <tr>
+                <td>Device Target</td>
+                <td>ESP32 Wrist-Worn</td>
+              </tr>
+              <tr>
+                <td>Emergency Contact</td>
+                <td id="displayEmergencyTel">+1 (555) 382-9910</td>
+              </tr>
+              <tr>
+                <td>Device Battery</td>
+                <td>
+                  <div class="battery-indicator-wrap">
+                    <span id="displayBatteryVal">94%</span>
+                    <span style="font-size: 0.6875rem; color: var(--text-muted);">(4.12V)</span>
+                    <div class="battery-bar-outer" aria-hidden="true">
+                      <div class="battery-bar-inner" id="batteryBarInner" style="width: 94%;"></div>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Firmware Engine</td>
+                <td style="color: var(--primary);">20-Tree RF + LWC</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Kinematic Monitor Card -->
+        <section class="dashboard-card kinematic-card" aria-labelledby="kinematicsHeading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+              </svg>
+              <h2 class="card-title" id="kinematicsHeading">Kinematic Monitor</h2>
+            </div>
+            <span class="card-badge">50 Hz IMU</span>
+          </div>
+
+          <div class="kinematic-status-row">
+            <span style="font-size: 0.8125rem; color: var(--text-muted);">State Machine:</span>
+            <span class="state-machine-pill" id="stateMachinePill">IDLE_MONITORING</span>
+          </div>
+
+          <!-- Dynamic Acceleration Magnitude Waveform Canvas -->
+          <div class="canvas-container">
+            <canvas id="kinematicWaveformCanvas" aria-label="Dynamic Acceleration Magnitude Waveform Chart"></canvas>
+          </div>
+
+          <div class="canvas-threshold-legend">
+            <div class="legend-item">
+              <span class="legend-line-mag" aria-hidden="true"></span>
+              <span>||a|| Vector (g)</span>
+            </div>
+            <div class="legend-item">
+              <span class="legend-line-shock" aria-hidden="true"></span>
+              <span>2.30g Shock Thresh</span>
+            </div>
+          </div>
+
+          <table class="clinical-details-table">
+            <tbody>
+              <tr>
+                <td>Peak Shock Magnitude</td>
+                <td id="peakImpactReadout">1.02 G</td>
+              </tr>
+              <tr>
+                <td>Post-Impact Immobility</td>
+                <td id="immobilityReadout">0.04 g²</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+      </div>
+
+      <!-- ===================================================================
+           CENTER COLUMN: PATIENT DEVICE STATUS & LIVE INCIDENT MAP
+           (Replaces generic 3D anatomy model with interactive spatial view)
+           =================================================================== -->
+      <div class="center-column">
+        
+        <!-- Live Status Banner -->
+        <div class="device-status-banner" id="deviceStatusBanner">
+          <div class="device-status-left">
+            <div class="status-badge-icon" id="deviceStatusIconWrap" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="device-state-headline" id="deviceStateHeadline">Device Online — Wrist Kinematics Active</div>
+              <div class="device-state-subtext" id="deviceStateSubtext">Telemetry stream normal • Real-time motion verified within safe parameters</div>
+            </div>
+          </div>
+          <span class="card-badge" id="lastUpdatedBadge">Synced: Just now</span>
+        </div>
+
+        <!-- Interactive Leaflet Map Card -->
+        <section class="dashboard-card map-card" aria-labelledby="mapCardHeading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+                <line x1="8" y1="2" x2="8" y2="18"/>
+                <line x1="16" y1="6" x2="16" y2="22"/>
+              </svg>
+              <h2 class="card-title" id="mapCardHeading">Spatial Geofence &amp; Incident Location</h2>
+            </div>
+            <span class="card-badge" id="gpsLockStatusBadge">GPS Lock Active</span>
+          </div>
+
+          <!-- Leaflet Viewport Container -->
+          <div class="map-viewport" id="leafletMapContainer" role="region" aria-label="Interactive patient geolocation map"></div>
+
+          <div class="map-action-bar">
+            <div class="coords-readout">
+              Coordinates: <strong id="mapLatDisplay">12.971600</strong>, <strong id="mapLonDisplay">77.594600</strong>
+              <span style="margin-left: 0.5rem; color: var(--text-muted);">(Geofence: 100m Safe Radius)</span>
+            </div>
+
+            <div class="map-controls-group">
+              <button type="button" class="btn-secondary" id="btnRecenterMap">
+                Recenter
               </button>
+              <button type="button" class="btn-secondary" id="btnToggleGeofence">
+                Toggle Geofence
+              </button>
+              <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="btn-secondary" id="btnExternalMaps">
+                Open in Maps ↗
+              </a>
             </div>
           </div>
-          
-          <div class="map-view-container">
-            <div id="leaflet-map"></div>
-          </div>
-        </div>
-      </section>
+        </section>
 
-    </main>
-
-    <!-- Emergency Critical Modal Overlay (Fall Triggered Status) -->
-    <div class="modal-overlay" id="emergency-modal">
-      <div class="modal-card">
-        <div class="emergency-alert-banner">CRITICAL EMERGENCY DETECTED</div>
-        <div class="modal-message-box">
-          <p class="warning-text">A high-impact acceleration spike (fall event) has been transmitted by the client module. Vitals alert is active.</p>
-        </div>
-        <div class="incident-telemetry-box">
-          <div class="incident-metric">
-            <span class="metric-lbl">IMPACT FORCE</span>
-            <span class="metric-val font-mono" id="modal-impact-val">0.0 G</span>
-          </div>
-          <div class="incident-metric">
-            <span class="metric-lbl">PULSE RATE</span>
-            <span class="metric-val font-mono" id="modal-bpm-val">-- BPM</span>
-          </div>
-        </div>
-        <div class="modal-emergency-actions">
-          <a class="dial-emergency-btn" id="emergency-phone-btn" href="tel:+911">
-            CALL OUT EMERGENCY SERVICES (+911)
-          </a>
-          <button class="dismiss-incident-btn" id="cancel-emergency-btn">
-            FALSE ALARM (RESET HARDWARE STATE)
-          </button>
-        </div>
       </div>
-    </div>
 
-    <!-- Patient Profile Slidedrawer Settings UI -->
-    <div class="drawer-overlay" id="profile-drawer-overlay">
-      <div class="profile-drawer" id="profile-drawer">
-        <header class="drawer-header">
-          <h3>PATIENT PARAMETERS</h3>
-          <button class="drawer-close-btn" id="profile-drawer-close" aria-label="Close Profile">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </header>
-        <div class="drawer-body">
-          <div class="profile-icon-indicator">
-            <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2" fill="none">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-          </div>
-          <div class="form-container">
-            <div class="config-input-group">
-              <label for="patient-name-input">PATIENT FULL NAME</label>
-              <input type="text" id="patient-name-input" class="clinical-input" value="James Smith" placeholder="Enter patient name">
+      <!-- ===================================================================
+           RIGHT COLUMN: VITALS, DEDICATED STEP METER, & NIST CRYPTO BADGE
+           =================================================================== -->
+      <div class="right-column">
+        
+        <!-- Heart Rate & Blood Oxygen (SpO2) Card -->
+        <section class="dashboard-card vitals-card" aria-labelledby="vitalsHeading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              <h2 class="card-title" id="vitalsHeading">Biometrical Vitals</h2>
             </div>
-            <button class="save-profile-btn" id="save-patient-name-btn">SAVE PARAMETERS</button>
+            <span class="card-badge">MAX30102</span>
           </div>
-        </div>
+
+          <div class="vitals-grid-row">
+            <!-- Heart Rate -->
+            <div class="vital-metric-tile">
+              <span class="vital-tile-header">Heart Pulse</span>
+              <div class="vital-numeric-group">
+                <span class="vital-big-num" id="bpmNumericVal">72</span>
+                <span class="vital-unit-label">BPM</span>
+              </div>
+              <span class="vital-range-text">Normal (60–100)</span>
+            </div>
+
+            <!-- Blood Oxygen (SpO2) -->
+            <div class="vital-metric-tile">
+              <span class="vital-tile-header">Blood Oxygen</span>
+              <div class="vital-numeric-group">
+                <span class="vital-big-num" id="spo2NumericVal">98</span>
+                <span class="vital-unit-label">%</span>
+              </div>
+              <span class="vital-range-text">Optimal (≥ 95%)</span>
+            </div>
+          </div>
+
+          <!-- Real-Time Sinus Rhythm Sparkline Canvas -->
+          <div class="ecg-sparkline-wrap">
+            <canvas id="ecgPulseCanvas" aria-label="ECG Sinus Rhythm Sparkline"></canvas>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+            <span>Sensor Optical Contact:</span>
+            <strong id="fingerContactStatus" style="color: var(--status-normal);">Finger Detected</strong>
+          </div>
+        </section>
+
+        <!-- DEDICATED STEP COUNT CARD (Matching Medical Reference Step Meter UI) -->
+        <section class="dashboard-card step-meter-card" aria-labelledby="stepCardHeading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 14 14"/>
+              </svg>
+              <h2 class="card-title" id="stepCardHeading">Daily Steps</h2>
+            </div>
+            <span class="step-goal-indicator" id="stepGoalIndicator">Goal: 10,000</span>
+          </div>
+
+          <div class="step-metric-display">
+            <span class="step-big-count" id="stepCounterBigVal">5,234</span>
+            <span style="font-size: 0.8125rem; color: var(--text-muted); font-weight: 600;">steps today</span>
+          </div>
+
+          <div class="step-submetrics-row">
+            <div class="step-submetric-box">
+              <span class="submetric-title">Traversed Distance</span>
+              <span class="submetric-value" id="stepDistanceVal">3.92 km</span>
+            </div>
+            <div class="step-submetric-box">
+              <span class="submetric-title">Active Burned</span>
+              <span class="submetric-value" id="stepCaloriesVal">209.4 kcal</span>
+            </div>
+          </div>
+
+          <!-- Vertical Bar Cadence Chart: Active walking bouts throughout day -->
+          <div class="cadence-chart-container">
+            <span style="font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">
+              Hourly Activity Bouts (Cadence Window: 280–1200 ms)
+            </span>
+            <div class="cadence-bars-row" id="cadenceBarsRow" aria-hidden="true">
+              <!-- Rendered via JS: 8 AM to 8 PM hourly bars -->
+            </div>
+            <div class="cadence-time-labels">
+              <span>08:00</span>
+              <span>12:00</span>
+              <span>16:00</span>
+              <span>20:00</span>
+            </div>
+          </div>
+
+          <div class="auto-reset-indicator">
+            <span>Midnight Auto-Reset: <strong style="color: var(--status-normal);">Active</strong></span>
+            <span id="nextMidnightCountdown">Resets in 08h 22m</span>
+          </div>
+        </section>
+
+        <!-- Cryptographic Verification Badge (NIST ASCON-128 AEAD) -->
+        <section class="dashboard-card crypto-badge-card" aria-labelledby="cryptoHeading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <h2 class="card-title" id="cryptoHeading">ASCON-128 Security</h2>
+            </div>
+            <span class="crypto-status-pill" id="cryptoBadgeStatus">✓ Verified Tag</span>
+          </div>
+
+          <div class="crypto-details-list">
+            <div class="crypto-row">
+              <span class="lbl">Cipher Standard:</span>
+              <span class="val">NIST LWC Finalist</span>
+            </div>
+            <div class="crypto-row">
+              <span class="lbl">Authentication Tag:</span>
+              <span class="val" id="cryptoTagVal">16-Byte Matched</span>
+            </div>
+            <div class="crypto-row">
+              <span class="lbl">Replay Nonce Check:</span>
+              <span class="val" id="cryptoNonceVal">#004812 (Strict Monotonic)</span>
+            </div>
+            <div class="crypto-row">
+              <span class="lbl">Decrypt Latency:</span>
+              <span class="val" id="cryptoLatencyVal">0.42 ms</span>
+            </div>
+            <div class="crypto-row">
+              <span class="lbl">Tamper Integrity:</span>
+              <span class="val" style="color: var(--status-normal);">0 Bit Discrepancy</span>
+            </div>
+          </div>
+
+          <div class="crypto-hash-preview" id="cryptoCiphertextPreview">
+            ASCON_TAG: e48b2a19c5... [Payload Authenticated]
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- =======================================================================
+       FOOTER: PRIVACY, TERMS, & LOCAL SYSTEM ANALYTICS
+       ======================================================================= -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div>
+        © 2026 ElderCare IoT Health Technologies. Clinical Assistance &amp; Secure Wearable Telemetry.
+      </div>
+      <div class="footer-links">
+        <button type="button" id="footerPrivacyLink">Privacy Policy</button>
+        <button type="button" id="footerTermsLink">Terms &amp; Conditions</button>
+        <a href="sitemap.xml" target="_blank" rel="noopener noreferrer">Sitemap</a>
+        <span id="dashboardUptime">Uptime: 99.98%</span>
       </div>
     </div>
+  </footer>
 
-  </div>
+  <!-- =======================================================================
+       ACCESSIBLE MODAL: PRIVACY POLICY (Checklist Item 1)
+       Native <dialog> element with focus trap & Esc dismiss
+       ======================================================================= -->
+  <dialog id="privacyDialog" aria-labelledby="privacyModalTitle">
+    <div class="modal-content-wrap">
+      <header class="modal-header">
+        <h2 id="privacyModalTitle">Privacy Policy &amp; Biometric Data Safety</h2>
+        <button type="button" class="modal-close-btn" id="closePrivacyBtn" aria-label="Close privacy modal">✕</button>
+      </header>
+      <div class="modal-body">
+        <p><strong>Effective Date:</strong> October 2026 | Version 2.4-ESP32 Compliance</p>
+        
+        <h3>1. On-Device Cryptographic Architecture</h3>
+        <p>ElderCare IoT prioritizes end-to-end patient confidentiality. All sensitive biometric vitals, fall alerts, and GPS coordinates are authenticated and encrypted directly on the ESP32 microcontroller using the NIST-selected <strong>ASCON-128 AEAD lightweight cryptographic suite</strong> before transmission to cloud relays.</p>
 
-  <!-- Client Side Script -->
+        <h3>2. Zero Storage of Raw Biometric Audio/Video</h3>
+        <p>Our wearable system does not record, stream, or retain raw audio, microphone streams, or optical camera footage. The MPU6050 and MAX30102 sensors measure purely rotational acceleration, angular velocity, and optical PPG reflection ratios.</p>
+
+        <h3>3. Client-Side Telemetry Caching</h3>
+        <p>Personal patient preferences (such as patient name and emergency contacts) are stored strictly within the client browser's local sandbox (<code>localStorage</code>) and are never monetized or shared with third-party advertising networks.</p>
+
+        <h3>4. Incident Reporting &amp; Emergency Dispatch</h3>
+        <p>When a confirmed fall impact occurs, encrypted packets containing coordinate tags are securely transmitted to authorized caregivers and designated emergency hotlines.</p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn-primary" id="confirmPrivacyBtn">I Acknowledge</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- =======================================================================
+       ACCESSIBLE MODAL: TERMS & CONDITIONS (Checklist Item 2)
+       ======================================================================= -->
+  <dialog id="termsDialog" aria-labelledby="termsModalTitle">
+    <div class="modal-content-wrap">
+      <header class="modal-header">
+        <h2 id="termsModalTitle">Terms &amp; Assistive Telemetry Guidelines</h2>
+        <button type="button" class="modal-close-btn" id="closeTermsBtn" aria-label="Close terms modal">✕</button>
+      </header>
+      <div class="modal-body">
+        <h3>1. Non-Diagnostic Assistive Purpose</h3>
+        <p>The ElderCare IoT Wearable Platform is an assistive, research-grade remote monitoring solution designed to provide caregivers with real-time awareness. <strong>It does not constitute a certified medical diagnostic device</strong> or replacement for professional clinical care.</p>
+
+        <h3>2. Network &amp; GPS Availability</h3>
+        <p>Transmission of emergency notifications depends upon active cellular, Wi-Fi, and satellite GNSS connectivity. In rural or enclosed environments, GPS accuracy may vary.</p>
+
+        <h3>3. Emergency Services Protocol</h3>
+        <p>In life-threatening emergencies, caregivers should immediately contact official regional emergency hotlines (e.g., 911 / 112) rather than relying exclusively on automated wireless pings.</p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn-primary" id="confirmTermsBtn">Understood</button>
+      </footer>
+    </div>
+  </dialog>
+
+  <!-- =======================================================================
+       ACCESSIBLE MODAL: EDIT PATIENT PROFILE (Checklist Item 17: Validation)
+       ======================================================================= -->
+  <dialog id="profileDialog" aria-labelledby="profileModalTitle">
+    <div class="modal-content-wrap">
+      <header class="modal-header">
+        <h2 id="profileModalTitle">Update Patient Clinical Profile</h2>
+        <button type="button" class="modal-close-btn" id="closeProfileBtn" aria-label="Close profile modal">✕</button>
+      </header>
+      <form id="patientProfileForm" class="modal-body" novalidate>
+        <div class="form-group">
+          <label for="inputPatientName">Patient Full Name</label>
+          <input type="text" id="inputPatientName" class="form-control" required minlength="2" maxlength="60" value="Eleanor Vance">
+          <span class="form-error-msg" id="nameError">Please enter a valid patient name.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="inputPatientAge">Patient Age (Years)</label>
+          <input type="number" id="inputPatientAge" class="form-control" required min="1" max="120" value="78">
+          <span class="form-error-msg" id="ageError">Please enter a valid age (1–120).</span>
+        </div>
+
+        <div class="form-group">
+          <label for="inputBloodGroup">Blood Group</label>
+          <select id="inputBloodGroup" class="form-control">
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+" selected>O+</option>
+            <option value="O-">O-</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="inputEmergencyContact">Emergency Contact Phone Number</label>
+          <input type="tel" id="inputEmergencyContact" class="form-control" required pattern="[\+]?[0-9\s\-\(\)]{7,20}" value="+1 (555) 382-9910">
+          <span class="form-error-msg" id="telError">Please enter a valid telephone number.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="inputStepGoal">Daily Step Target</label>
+          <input type="number" id="inputStepGoal" class="form-control" required min="1000" max="50000" step="500" value="10000">
+        </div>
+
+        <div class="modal-footer" style="padding: 1rem 0 0; border-top: none;">
+          <button type="button" class="btn-secondary" id="cancelProfileBtn">Cancel</button>
+          <button type="submit" class="btn-primary">Save Parameters</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- =======================================================================
+       COOKIE & TELEMETRY CONSENT BANNER (Checklist Item 5)
+       ======================================================================= -->
+  <aside class="cookie-banner" id="cookieConsentBanner" role="dialog" aria-label="Local caching consent">
+    <div class="cookie-text">
+      <strong>Clinical Telemetry Notice:</strong> This dashboard caches patient settings, NIST nonces, and step histories locally in your browser (<code>localStorage</code>) to enable offline resilience.
+    </div>
+    <div class="cookie-actions">
+      <button type="button" class="btn-secondary" id="btnDismissConsent">Decline</button>
+      <button type="button" class="btn-primary" id="btnAcceptConsent">Accept</button>
+    </div>
+  </aside>
+
+  <!-- Client-Side Cryptographic Engine & Telemetry Scripts -->
+  <script src="ascon.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

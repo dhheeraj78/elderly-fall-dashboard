@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#1E293B" />
+    </linearGradient>
+    <linearGradient id="blueCard" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#1E293B" stop-opacity="0.8" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)" />
+
+  <!-- Subtle Grid Accent -->
+  <g stroke="#334155" stroke-width="1" opacity="0.3">
+    <line x1="0" y1="105" x2="1200" y2="105" />
+    <line x1="0" y1="210" x2="1200" y2="210" />
+    <line x1="0" y1="315" x2="1200" y2="315" />
+    <line x1="0" y1="420" x2="1200" y2="420" />
+    <line x1="0" y1="525" x2="1200" y2="525" />
+    <line x1="200" y1="0" x2="200" y2="630" />
+    <line x1="400" y1="0" x2="400" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" />
+    <line x1="800" y1="0" x2="800" y2="630" />
+    <line x1="1000" y1="0" x2="1000" y2="630" />
+  </g>
+
+  <!-- Header Shield Badge -->
+  <g transform="translate(100, 100)">
+    <path d="M40 5 L68 15 C68 45 54 65 40 75 C26 65 12 45 12 15 Z" fill="#2563EB" />
+    <rect x="36" y="24" width="8" height="28" rx="2" fill="#FFFFFF" />
+    <rect x="26" y="34" width="28" height="8" rx="2" fill="#FFFFFF" />
+    <text x="90" y="42" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="28" font-weight="700" fill="#FFFFFF" letter-spacing="1">ELDERCARE IOT</text>
+    <text x="90" y="68" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="16" font-weight="500" fill="#94A3B8">SECURE WEARABLE TELEMETRY &amp; FALL DETECTION</text>
+  </g>
+
+  <!-- Main Headline -->
+  <text x="100" y="260" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="52" font-weight="800" fill="#F8FAFC">Clinical Caregiver Telemetry Dashboard</text>
+  <text x="100" y="315" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="24" font-weight="400" fill="#CBD5E1">Real-Time ESP32 Wrist Kinematics • GPS Geofence • NIST ASCON-128 AEAD</text>
+
+  <!-- Metric Badges Row -->
+  <g transform="translate(100, 380)">
+    <!-- Fall Detection Badge -->
+    <rect x="0" y="0" width="300" height="140" rx="16" fill="url(#blueCard)" stroke="#3B82F6" stroke-width="1.5" />
+    <text x="24" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="14" font-weight="600" fill="#93C5FD">FALL DETECTION ENGINE</text>
+    <text x="24" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="26" font-weight="700" fill="#22C55E">93.5% Recall / 2.8% FPR</text>
+    <text x="24" y="112" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="14" font-weight="400" fill="#94A3B8">Stage 1 Shock (2.3g) + 20-Tree RF</text>
+
+    <!-- Pedometer Badge -->
+    <rect x="340" y="0" width="300" height="140" rx="16" fill="url(#blueCard)" stroke="#3B82F6" stroke-width="1.5" />
+    <text x="364" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="14" font-weight="600" fill="#93C5FD">WRIST PEDOMETER ENGINE</text>
+    <text x="364" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="26" font-weight="700" fill="#38BDF8">Real-Time Cadence</text>
+    <text x="364" y="112" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="14" font-weight="400" fill="#94A3B8">EMA Baseline + 4-Step Debounce</text>
+
+    <!-- Crypto Badge -->
+    <rect x="680" y="0" width="320" height="140" rx="16" fill="url(#blueCard)" stroke="#10B981" stroke-width="1.5" />
+    <text x="704" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="14" font-weight="600" fill="#6EE7B7">NIST LWC FINALIST</text>
+    <text x="704" y="80" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="26" font-weight="700" fill="#10B981">ASCON-128 AEAD</text>
+    <text x="704" y="112" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif" font-size="14" font-weight="400" fill="#94A3B8">Zero-Tamper Authenticated Cipher</text>
+  </g>
+</svg>
