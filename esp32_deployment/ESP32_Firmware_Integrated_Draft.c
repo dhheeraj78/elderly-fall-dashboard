@@ -258,8 +258,8 @@ typedef struct {
 static QueueHandle_t emergency_alert_queue = NULL;
 static SemaphoreHandle_t vitals_mutex = NULL;
 static shared_vitals_t g_vitals = {
-    .lat = 12.9716f,
-    .lon = 77.5946f,
+    .lat = 12.8731f, // Sathyabama University, Chennai
+    .lon = 80.2219f,
     .hr = 72,
     .spo2 = 98,
     .battery = 95,

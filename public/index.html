@@ -277,11 +277,15 @@
 
           <div class="map-action-bar">
             <div class="coords-readout">
-              Coordinates: <strong id="mapLatDisplay">12.971600</strong>, <strong id="mapLonDisplay">77.594600</strong>
+              Location: <strong>Sathyabama University, Chennai</strong>
+              (<span id="mapLatDisplay">12.873100</span>, <span id="mapLonDisplay">80.221900</span>)
               <span style="margin-left: 0.5rem; color: var(--text-muted);">(Geofence: 100m Safe Radius)</span>
             </div>
 
             <div class="map-controls-group">
+              <button type="button" class="btn-secondary" id="btnToggleMapLayer">
+                Satellite / Street
+              </button>
               <button type="button" class="btn-secondary" id="btnRecenterMap">
                 Recenter
               </button>
@@ -575,13 +579,13 @@
   <!-- =======================================================================
        COOKIE & TELEMETRY CONSENT BANNER (Checklist Item 5)
        ======================================================================= -->
-  <aside class="cookie-banner" id="cookieConsentBanner" role="dialog" aria-label="Local caching consent">
+  <aside class="cookie-banner" id="cookieConsentBanner" role="dialog" aria-label="Cookie and Telemetry Consent">
     <div class="cookie-text">
-      <strong>Clinical Telemetry Notice:</strong> This dashboard caches patient settings, NIST nonces, and step histories locally in your browser (<code>localStorage</code>) to enable offline resilience.
+      <strong>Cookie &amp; Telemetry Notice:</strong> We use essential cookies and browser storage to maintain secure ASCON cryptographic sessions, vital signs cache, and offline caregiver alerts.
     </div>
     <div class="cookie-actions">
       <button type="button" class="btn-secondary" id="btnDismissConsent">Decline</button>
-      <button type="button" class="btn-primary" id="btnAcceptConsent">Accept</button>
+      <button type="button" class="btn-primary" id="btnAcceptConsent">Accept Cookies</button>
     </div>
   </aside>
 

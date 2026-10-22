@@ -58,39 +58,71 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
-/* Dark Mode Clinical Theme */
+/* Authentic Google Dark Theme (Material Dark Design) */
 [data-theme="dark"] {
-  --bg-app: #0F172A;
-  --bg-surface: #1E293B;
-  --bg-subtle: #0B132B;
-  --bg-muted: #334155;
+  --bg-app: #202124;         /* Google Dark Gray Background */
+  --bg-surface: #303134;     /* Google Card Surface */
+  --bg-subtle: #28292C;      /* Google Elevated Sub-surface */
+  --bg-muted: #3C4043;       /* Google Muted Surface */
 
-  --text-main: #F8FAFC;
-  --text-secondary: #CBD5E1;
-  --text-muted: #94A3B8;
+  --text-main: #E8EAED;      /* Google Primary White Text */
+  --text-secondary: #BDC1C6; /* Google Secondary Light Gray */
+  --text-muted: #9AA0A6;     /* Google Muted Gray */
 
-  --primary: #3B82F6;
-  --primary-hover: #60A5FA;
-  --primary-subtle: rgba(59, 130, 246, 0.15);
-  --primary-border: #1E3A8A;
+  --primary: #8AB4F8;        /* Google Blue Dark Accent */
+  --primary-hover: #AECBFA;
+  --primary-subtle: rgba(138, 180, 248, 0.15);
+  --primary-border: #5F6368;
 
-  --status-normal: #22C55E;
-  --status-normal-bg: rgba(34, 197, 94, 0.15);
-  --status-normal-border: rgba(34, 197, 94, 0.3);
+  --status-normal: #81C995;  /* Google Material Green */
+  --status-normal-bg: rgba(129, 201, 149, 0.15);
+  --status-normal-border: rgba(129, 201, 149, 0.35);
 
-  --status-warning: #F59E0B;
-  --status-warning-bg: rgba(245, 158, 11, 0.15);
-  --status-warning-border: rgba(245, 158, 11, 0.3);
+  --status-warning: #FDD663; /* Google Material Amber/Yellow */
+  --status-warning-bg: rgba(253, 214, 99, 0.15);
+  --status-warning-border: rgba(253, 214, 99, 0.35);
 
-  --status-emergency: #EF4444;
-  --status-emergency-bg: rgba(239, 68, 68, 0.2);
-  --status-emergency-border: rgba(239, 68, 68, 0.4);
+  --status-emergency: #F28B82; /* Google Material Red */
+  --status-emergency-bg: rgba(242, 139, 130, 0.2);
+  --status-emergency-border: rgba(242, 139, 130, 0.4);
 
-  --border-card: #334155;
-  --border-subtle: #1E293B;
+  --border-card: #3C4043;    /* Google Divider Border */
+  --border-subtle: #3C4043;
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 8px -1px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 10px 20px -3px rgba(0, 0, 0, 0.7);
+}
+
+/* Google Dark Theme Component Overrides */
+[data-theme="dark"] .btn-primary {
+  background-color: var(--primary);
+  color: #202124;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .btn-primary:hover {
+  background-color: var(--primary-hover);
+}
+
+[data-theme="dark"] dialog::backdrop {
+  background: rgba(0, 0, 0, 0.72);
+}
+
+[data-theme="dark"] .leaflet-popup-content-wrapper,
+[data-theme="dark"] .leaflet-popup-tip {
+  background-color: #303134;
+  color: #E8EAED;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  border: 1px solid #3C4043;
+}
+
+[data-theme="dark"] .leaflet-popup-content strong {
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .leaflet-popup-content div {
+  color: #BDC1C6 !important;
 }
 
 /* Base Styles & Resets */

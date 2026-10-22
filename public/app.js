@@ -45,8 +45,8 @@ const state = {
   telemetry: {
     status: 'NORMAL',
     impact: 1.02,
-    lat: 12.9716,
-    lon: 77.5946,
+    lat: 12.8731,
+    lon: 80.2219,
     hr: 72,
     spo2: 98,
     battery: 94,
@@ -57,7 +57,7 @@ const state = {
     lastUpdated: new Date()
   },
   geofence: {
-    homeCoords: [12.9716, 77.5946],
+    homeCoords: [12.8731, 80.2219],
     radiusMeters: 100,
     visible: true
   },
@@ -75,11 +75,21 @@ const state = {
 };
 
 /* =========================================================================
-   3. LEAFLET INTERACTIVE MAP & GEOFENCE CONTROLLER
+   3. LEAFLET REALISTIC MAP & GEOFENCE CONTROLLER
+   Realistic Google Maps Hybrid Satellite & Google Streets Tiles
    ========================================================================= */
 let leafletMap = null;
 let patientMarker = null;
 let geofenceCircle = null;
+let currentTileLayer = null;
+let isSatelliteMode = true;
+
+const MAP_TILES = {
+  // Realistic Google Maps Hybrid Satellite (High-res aerial photography + Roads + Landmarks)
+  satellite: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+  // Realistic Google Maps Vector Streets
+  street: 'https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}'
+};
 
 function initLeafletMap() {
   const container = document.getElementById('leafletMapContainer');
@@ -89,27 +99,49 @@ function initLeafletMap() {
     leafletMap = L.map('leafletMapContainer', {
       zoomControl: true,
       attributionControl: false
-    }).setView(state.geofence.homeCoords, 16);
+    }).setView(state.geofence.homeCoords, 17);
 
-    // Standard OpenStreetMap tiles over HTTPS
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19
+    // Default to Realistic Google Maps Hybrid Satellite Layer
+    currentTileLayer = L.tileLayer(MAP_TILES.satellite, {
+      maxZoom: 20,
+      subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
     }).addTo(leafletMap);
 
-    // 100m Geofence Safe Radius Circle
+    // 100m Geofence Safe Radius Circle around Sathyabama University
     geofenceCircle = L.circle(state.geofence.homeCoords, {
-      color: '#2563EB',
-      fillColor: '#3B82F6',
-      fillOpacity: 0.12,
+      color: '#1A73E8',
+      fillColor: '#1A73E8',
+      fillOpacity: 0.18,
       radius: state.geofence.radiusMeters,
       dashArray: '6, 8',
-      weight: 2
+      weight: 2.5
     }).addTo(leafletMap);
 
-    // Patient Pin Icon
+    // Google Maps Style Teardrop Pin Marker
     updateMapMarker(state.telemetry.lat, state.telemetry.lon, false);
   } catch (err) {
     console.error('[Map] Initialization failure:', err);
+  }
+}
+
+function toggleMapLayer() {
+  if (!leafletMap) return;
+  if (currentTileLayer) {
+    leafletMap.removeLayer(currentTileLayer);
+  }
+  isSatelliteMode = !isSatelliteMode;
+  const tileUrl = isSatelliteMode ? MAP_TILES.satellite : MAP_TILES.street;
+  currentTileLayer = L.tileLayer(tileUrl, {
+    maxZoom: 20,
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+  }).addTo(leafletMap);
+
+  if (geofenceCircle && state.geofence.visible) geofenceCircle.bringToFront();
+  if (patientMarker) patientMarker.setZIndexOffset(1000);
+
+  const toggleBtn = document.getElementById('btnToggleMapLayer');
+  if (toggleBtn) {
+    toggleBtn.innerText = isSatelliteMode ? 'Switch to Street' : 'Switch to Satellite';
   }
 }
 
@@ -117,27 +149,24 @@ function updateMapMarker(lat, lon, isEmergency) {
   if (!leafletMap || typeof L === 'undefined') return;
 
   const latLng = [lat, lon];
-  const markerHtml = isEmergency
-    ? `<div style="
-        width: 32px; height: 32px; border-radius: 50%;
-        background-color: #DC2626; border: 3px solid #FFFFFF;
-        box-shadow: 0 0 16px rgba(220, 38, 38, 0.9);
-        display: flex; align-items: center; justify-content: center;
-        color: white; font-weight: bold; font-size: 14px;
-        animation: pulse-ring-red 1s infinite;
-      ">!</div>`
-    : `<div style="
-        width: 24px; height: 24px; border-radius: 50%;
-        background-color: #2563EB; border: 3px solid #FFFFFF;
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.5);
-        display: flex; align-items: center; justify-content: center;
-      "><div style="width: 8px; height: 8px; border-radius: 50%; background-color: #10B981;"></div></div>`;
+  // Realistic Google Maps Style Drop Pin SVG (Teardrop with shadow & center dot)
+  const markerHtml = `
+    <div style="position: relative; width: 34px; height: 44px; display: flex; justify-content: center;">
+      <svg width="34" height="44" viewBox="0 0 34 44" fill="none" style="filter: drop-shadow(0 3px 6px rgba(0,0,0,0.55));">
+        <path d="M17 0C7.61 0 0 7.61 0 17C0 29.75 17 44 17 44C17 44 34 29.75 34 17C34 7.61 26.39 0 17 0Z" fill="${isEmergency ? '#DC2626' : '#EA4335'}"/>
+        <circle cx="17" cy="16" r="6.5" fill="#FFFFFF"/>
+        <circle cx="17" cy="16" r="3.5" fill="${isEmergency ? '#DC2626' : '#1A73E8'}"/>
+      </svg>
+      ${isEmergency ? '<div style="position:absolute; width:48px; height:48px; border-radius:50%; background:rgba(220,38,38,0.45); top:-2px; animation: pulse-ring-red 1s infinite;"></div>' : ''}
+    </div>
+  `;
 
   const customIcon = L.divIcon({
-    className: 'leaflet-patient-icon',
+    className: 'google-maps-realistic-pin',
     html: markerHtml,
-    iconSize: isEmergency ? [32, 32] : [24, 24],
-    iconAnchor: isEmergency ? [16, 16] : [12, 12]
+    iconSize: [34, 44],
+    iconAnchor: [17, 44],
+    popupAnchor: [0, -40]
   });
 
   if (patientMarker) {
@@ -147,10 +176,30 @@ function updateMapMarker(lat, lon, isEmergency) {
     patientMarker = L.marker(latLng, { icon: customIcon }).addTo(leafletMap);
   }
 
-  // Update popup
+  // Update realistic location popup
   const popupContent = isEmergency
-    ? `<strong>EMERGENCY: Fall Detected!</strong><br>Impact: ${state.telemetry.impact.toFixed(2)}G<br><a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank">Direct Google Maps Route ↗</a>`
-    : `<strong>Patient: ${state.patient.name}</strong><br>Status: Wrist Active • Within Geofence`;
+    ? `<div style="font-family: Roboto, -apple-system, sans-serif; min-width: 200px; padding: 2px;">
+        <strong style="color: #DC2626; font-size: 0.875rem;">⚠️ CRITICAL: Fall Detected!</strong><br>
+        <div style="margin-top: 4px; font-size: 0.75rem; color: #3C4043;">
+          Impact: <strong>${state.telemetry.impact.toFixed(2)}G</strong><br>
+          Location: <strong>Sathyabama University, Chennai</strong><br>
+          Coordinates: ${lat.toFixed(6)}, ${lon.toFixed(6)}
+        </div>
+        <div style="margin-top: 8px;">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" rel="noopener noreferrer" style="color: #1A73E8; font-weight: 700; font-size: 0.75rem; text-decoration: none;">Direct Google Maps Route ↗</a>
+        </div>
+      </div>`
+    : `<div style="font-family: Roboto, -apple-system, sans-serif; min-width: 200px; padding: 2px;">
+        <strong style="color: #202124; font-size: 0.875rem;">Patient: ${state.patient.name}</strong><br>
+        <div style="margin-top: 4px; font-size: 0.75rem; color: #5F6368;">
+          Location: <strong>Sathyabama University, Chennai</strong><br>
+          <span style="color: #1E8E3E; font-weight: 600;">Status: Safe • Within 100m Geofence</span><br>
+          Coordinates: ${lat.toFixed(6)}, ${lon.toFixed(6)}
+        </div>
+        <div style="margin-top: 8px;">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" rel="noopener noreferrer" style="color: #1A73E8; font-weight: 600; font-size: 0.75rem; text-decoration: none;">Open in Google Maps ↗</a>
+        </div>
+      </div>`;
   patientMarker.bindPopup(popupContent);
 
   // Update UI coordinate display
@@ -199,7 +248,7 @@ function initKinematicWaveform() {
 
     // Draw 1.0g gravity baseline
     ctx.beginPath();
-    ctx.strokeStyle = document.body.dataset.theme === 'dark' ? '#334155' : '#E2E8F0';
+    ctx.strokeStyle = document.body.dataset.theme === 'dark' ? '#3C4043' : '#E2E8F0';
     ctx.lineWidth = 1;
     const base1gY = gToY(1.0);
     ctx.moveTo(0, base1gY);
@@ -210,7 +259,7 @@ function initKinematicWaveform() {
     const threshY = gToY(2.30);
     ctx.beginPath();
     ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = '#DC2626';
+    ctx.strokeStyle = document.body.dataset.theme === 'dark' ? '#F28B82' : '#DC2626';
     ctx.lineWidth = 1.5;
     ctx.moveTo(0, threshY);
     ctx.lineTo(w, threshY);
@@ -219,7 +268,7 @@ function initKinematicWaveform() {
 
     // Draw Acceleration Magnitude Waveform
     ctx.beginPath();
-    ctx.strokeStyle = '#2563EB';
+    ctx.strokeStyle = document.body.dataset.theme === 'dark' ? '#8AB4F8' : '#2563EB';
     ctx.lineWidth = 2;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
@@ -245,7 +294,8 @@ function pushKinematicSample(mag) {
 }
 
 /* =========================================================================
-   5. BIOMETRICAL ECG SPARKLINE (Sinus Rhythm Pulse)
+   5. BIOMETRICAL ECG SPARKLINE (Active Sinus Wave ONLY on Heartbeat Detection)
+   Flatlines immediately when Optical Sensor has No Contact or hr == 0
    ========================================================================= */
 let ecgAnimId = null;
 const ecgPoints = [];
@@ -275,24 +325,37 @@ function initECGSparkline() {
     const h = rect.height;
     ctx.clearRect(0, 0, w, h);
 
-    timer++;
+    // Physiological contact & heart beat detection check
+    const hasDetectedPulse = (state.telemetry.hasFinger === true && state.telemetry.hr > 0);
     let currentY = h / 2;
-    const period = 48; // speed of heart pulse
-    const cycle = timer % period;
 
-    // Standard clinical P-QRS-T complex
-    if (cycle >= 8 && cycle <= 11) currentY -= 3; // P-wave
-    else if (cycle === 13) currentY += 4;         // Q-dip
-    else if (cycle === 15) currentY -= 20;        // R-spike
-    else if (cycle === 17) currentY += 15;        // S-dip
-    else if (cycle >= 22 && cycle <= 26) currentY -= 5; // T-wave
+    if (hasDetectedPulse) {
+      timer++;
+      // Dynamically calibrate cardiac cycle to patient heart rate (BPM)
+      const currentBpm = state.telemetry.hr || 72;
+      const period = Math.max(28, Math.min(75, Math.round((60 / currentBpm) * 60)));
+      const cycle = timer % period;
+
+      // Standard clinical P-QRS-T complex
+      if (cycle >= 8 && cycle <= 11) currentY -= 3; // P-wave
+      else if (cycle === 13) currentY += 4;         // Q-dip
+      else if (cycle === 15) currentY -= 20;        // R-spike
+      else if (cycle === 17) currentY += 15;        // S-dip
+      else if (cycle >= 22 && cycle <= 26) currentY -= 5; // T-wave
+    } else {
+      // Optical sensor detects NO contact or pulse lost -> STRICT FLATLINE
+      currentY = (h / 2) + (Math.random() - 0.5) * 0.7; // subtle microscopic electrical noise
+    }
 
     ecgPoints.push(currentY);
     if (ecgPoints.length > maxPoints) ecgPoints.shift();
 
+    const isDark = document.body.dataset.theme === 'dark';
     ctx.beginPath();
-    ctx.strokeStyle = '#16A34A';
-    ctx.lineWidth = 1.75;
+    ctx.strokeStyle = hasDetectedPulse 
+      ? (isDark ? '#81C995' : '#16A34A')   // Google Material Green / Precision Green
+      : (isDark ? '#5F6368' : '#94A3B8');  // Google Muted Gray / Slate Gray Flatline
+    ctx.lineWidth = hasDetectedPulse ? 1.85 : 1.2;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
 
@@ -568,18 +631,25 @@ function connectFirebaseLiveStream() {
 function startSimulationStream() {
   // Realistic clinical fallback loop when offline
   setInterval(() => {
-    // Normal sinus jitter
-    const hr = 70 + Math.floor(Math.sin(Date.now() / 3000) * 4);
-    const spo2 = 98 + Math.floor(Math.random() * 2);
+    // Only generate heart rate and oxygen if optical sensor has detected contact
+    let hr = 0;
+    let spo2 = 0;
+    if (state.telemetry.hasFinger) {
+      hr = 70 + Math.floor(Math.sin(Date.now() / 3000) * 4);
+      spo2 = 98 + Math.floor(Math.random() * 2);
+    }
+
     // Subtle step progression
     if (Math.random() < 0.3) {
       state.telemetry.steps += 1;
       state.telemetry.distanceKm = state.telemetry.steps * 0.00075;
       state.telemetry.calories = state.telemetry.steps * 0.040;
     }
+
     renderTelemetryData({
       hr,
       spo2,
+      hasFinger: state.telemetry.hasFinger,
       steps: state.telemetry.steps,
       distanceKm: state.telemetry.distanceKm,
       calories: state.telemetry.calories,
@@ -681,10 +751,10 @@ function setupModalsAndForms() {
     });
   }
 
-  // Cookie Consent Banner (Checklist Item 5)
+  // Cookie Consent Banner (Item 5: Always displayed on PWA link launch)
   const consentBanner = document.getElementById('cookieConsentBanner');
-  const hasConsent = localStorage.getItem('elder_consent');
-  if (consentBanner && !hasConsent) {
+  if (consentBanner) {
+    // Show banner whenever opened via link or PWA
     consentBanner.classList.add('active');
   }
   document.getElementById('btnAcceptConsent')?.addEventListener('click', () => {
@@ -696,6 +766,26 @@ function setupModalsAndForms() {
     consentBanner?.classList.remove('active');
   });
 
+  // Interactive Optical Sensor Contact Toggle (For Real-Time Pulse Validation)
+  const fingerStatusEl = document.getElementById('fingerContactStatus');
+  if (fingerStatusEl) {
+    fingerStatusEl.style.cursor = 'pointer';
+    fingerStatusEl.setAttribute('title', 'Click to toggle MAX30102 finger detection on/off');
+    fingerStatusEl.addEventListener('click', () => {
+      const currentContact = (state.telemetry.hasFinger === true && state.telemetry.hr > 0);
+      const nextContact = !currentContact;
+      state.telemetry.hasFinger = nextContact;
+      if (!nextContact) {
+        state.telemetry.hr = 0;
+        state.telemetry.spo2 = 0;
+      } else {
+        state.telemetry.hr = 72;
+        state.telemetry.spo2 = 98;
+      }
+      renderTelemetryData({});
+    });
+  }
+
   // Emergency Call to Action Dispatch (Checklist Item 20 CTA)
   document.getElementById('btnAcknowledgeDispatch')?.addEventListener('click', () => {
     alert(`[EMERGENCY DISPATCH INITIATED]\n\nContacting caregiver hotline: ${state.patient.tel}\nTransmitting verified GPS coordinates: ${state.telemetry.lat.toFixed(6)}, ${state.telemetry.lon.toFixed(6)}\nProtocol: EMS unit alert dispatched.`);
@@ -706,9 +796,11 @@ function setupModalsAndForms() {
     renderTelemetryData({ status: 'NORMAL', impact: 1.02 });
   });
 
-  // Map Controls
+  // Map Controls & Layer Switcher
+  document.getElementById('btnToggleMapLayer')?.addEventListener('click', toggleMapLayer);
+
   document.getElementById('btnRecenterMap')?.addEventListener('click', () => {
-    if (leafletMap) leafletMap.setView([state.telemetry.lat, state.telemetry.lon], 16);
+    if (leafletMap) leafletMap.setView([state.telemetry.lat, state.telemetry.lon], 17);
   });
 
   document.getElementById('btnToggleGeofence')?.addEventListener('click', () => {
@@ -722,15 +814,19 @@ function setupModalsAndForms() {
     }
   });
 
-  // Theme Toggle (Dark / Light Mode)
+  // Authentic Google Dark Theme Toggle
   const themeBtn = document.getElementById('themeToggleBtn');
-  const savedTheme = localStorage.getItem('elder_theme') || 'light';
+  const themeLabel = document.getElementById('themeToggleLabel');
+  const savedTheme = localStorage.getItem('elder_theme') || 'dark';
   document.body.dataset.theme = savedTheme;
+  if (themeLabel) themeLabel.innerText = savedTheme === 'dark' ? 'Theme: Dark' : 'Theme: Light';
+
   themeBtn?.addEventListener('click', () => {
     const cur = document.body.dataset.theme;
     const next = cur === 'dark' ? 'light' : 'dark';
     document.body.dataset.theme = next;
     localStorage.setItem('elder_theme', next);
+    if (themeLabel) themeLabel.innerText = next === 'dark' ? 'Theme: Dark' : 'Theme: Light';
   });
 }
 
