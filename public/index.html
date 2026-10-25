@@ -59,7 +59,14 @@
         <div class="brand-info">
           <h1 class="brand-title">
             ElderCare IoT
-            <span class="brand-badge-version">v2.4-ESP32</span>
+            <span class="brand-badge-version clickable-tinyml-trigger" id="versionBadgeTrigger" title="Click to Verify TinyML &amp; Encrypt" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Version 2.4 ESP32. Click to Verify TinyML and Encrypt">
+              v2.4-ESP32
+            </span>
+            <button type="button" class="tinyml-header-quickbtn" id="openTinyMLModalBtn" title="Click to Verify TinyML &amp; Encrypt" aria-label="Open TinyML &amp; ASCON-128 Test Bench">
+              <span class="tinyml-btn-pulse" aria-hidden="true"></span>
+              <span class="tinyml-btn-icon" aria-hidden="true">⚡</span>
+              <span class="tinyml-btn-text">Verify TinyML &amp; Encrypt</span>
+            </button>
           </h1>
           <span class="brand-subtitle">Clinical Caregiver Telemetry &amp; Wrist Kinematics Console</span>
         </div>
@@ -577,6 +584,455 @@
   </dialog>
 
   <!-- =======================================================================
+       TINYML & ASCON-128 VERIFICATION TEST BENCH MODAL (Clinical Edge Diagnostics)
+       ======================================================================= -->
+  <dialog class="tinyml-dialog-modal" id="tinymlModal" aria-labelledby="tinymlModalTitle" aria-modal="true">
+    <div class="tinyml-modal-container">
+      
+      <!-- Modal Header -->
+      <header class="tinyml-modal-header">
+        <div class="tinyml-header-title-wrap">
+          <div class="tinyml-chip-icon-box" aria-hidden="true">
+            <span>⚡</span>
+          </div>
+          <div>
+            <h2 id="tinymlModalTitle" class="tinyml-modal-title">
+              TinyML &amp; ASCON-128 Verification Test Bench
+            </h2>
+            <p class="tinyml-modal-desc">
+              Clinical Caregiver Kinematics • Embedded C99 Random Forest (20 Trees) • NIST ASCON-128 AEAD Cryptographic Channel
+            </p>
+          </div>
+        </div>
+        <button type="button" class="tinyml-close-btn" id="closeTinyMLModalBtn" aria-label="Close Test Bench Dialog">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </header>
+
+      <!-- Presets & Status Bar -->
+      <section class="tinyml-presets-toolbar" aria-label="Simulation Presets">
+        <div class="presets-btn-group">
+          <button type="button" class="preset-pill-btn active" id="presetWalkingBtn">
+            <span class="preset-icon" aria-hidden="true">🚶</span>
+            <span>Preset 1: Normal Walking (ADL)</span>
+          </button>
+          <button type="button" class="preset-pill-btn" id="presetHardFallBtn">
+            <span class="preset-icon" aria-hidden="true">🚨</span>
+            <span>Preset 2: Hard Ground Fall</span>
+          </button>
+          <button type="button" class="preset-pill-btn btn-reset-preset" id="resetParamsBtn" title="Reset all features to nominal baseline">
+            <span class="preset-icon" aria-hidden="true">↺</span>
+            <span>Reset Baseline</span>
+          </button>
+        </div>
+
+        <div class="tinyml-engine-chip" id="engineStatusChip" role="status" aria-live="polite">
+          <span class="chip-status-dot"></span>
+          <span id="engineStatusText">TinyML Edge Engine Ready (&lt; 5 ms)</span>
+        </div>
+      </section>
+
+      <!-- Diagnostics Modal Body (Two-Column Layout) -->
+      <div class="tinyml-modal-body">
+        
+        <!-- Left Column: 17 Rotation-Invariant Extracted Feature Parameters -->
+        <div class="tinyml-features-column">
+          <div class="column-header">
+            <h3 class="column-title">17 Rotation-Invariant Model Features</h3>
+            <span class="column-subtitle">C99 Fixed-Dimension Vector • Rotation &amp; Wrist Invariant</span>
+          </div>
+
+          <!-- Feature Group 1: Acceleration Magnitude (g) -->
+          <fieldset class="feature-group-card">
+            <legend class="group-legend">
+              <span class="legend-dot dot-acc"></span>
+              Acceleration Magnitude Vectors (|a| in g)
+            </legend>
+            <div class="feature-inputs-grid">
+              
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_acc_mag_mean">acc_mean</label>
+                  <span class="field-unit-pill">g</span>
+                </div>
+                <input type="number" id="feat_acc_mag_mean" class="feat-num-input" step="0.01" min="0" max="10" value="1.01">
+                <span class="field-desc">Mean magnitude</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_acc_mag_std">acc_std</label>
+                  <span class="field-unit-pill">g</span>
+                </div>
+                <input type="number" id="feat_acc_mag_std" class="feat-num-input" step="0.01" min="0" max="6" value="0.08">
+                <span class="field-desc">Standard deviation</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_acc_mag_min">acc_min</label>
+                  <span class="field-unit-pill">g</span>
+                </div>
+                <input type="number" id="feat_acc_mag_min" class="feat-num-input" step="0.01" min="0" max="5" value="0.88">
+                <span class="field-desc">Free-fall valley (&lt;0.2g fall)</span>
+              </div>
+
+              <div class="feature-field-unit highlight-field">
+                <div class="field-top-row">
+                  <label for="feat_acc_mag_max">acc_max</label>
+                  <span class="field-unit-pill">g</span>
+                </div>
+                <input type="number" id="feat_acc_mag_max" class="feat-num-input" step="0.05" min="0" max="15" value="1.15">
+                <span class="field-desc">Peak shock (&gt;2.3g impact)</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_acc_mag_range">acc_range</label>
+                  <span class="field-unit-pill">g</span>
+                </div>
+                <input type="number" id="feat_acc_mag_range" class="feat-num-input" step="0.05" min="0" max="15" value="0.27">
+                <span class="field-desc">Max - min excursion</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_acc_mag_rms">acc_rms</label>
+                  <span class="field-unit-pill">g</span>
+                </div>
+                <input type="number" id="feat_acc_mag_rms" class="feat-num-input" step="0.01" min="0" max="10" value="1.01">
+                <span class="field-desc">Root-mean-square</span>
+              </div>
+
+            </div>
+          </fieldset>
+
+          <!-- Feature Group 2: Gyroscope Magnitude (deg/s) -->
+          <fieldset class="feature-group-card">
+            <legend class="group-legend">
+              <span class="legend-dot dot-gyro"></span>
+              Gyroscope Magnitude Vectors (|ω| in °/s)
+            </legend>
+            <div class="feature-inputs-grid">
+              
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_gyro_mag_mean">gyro_mean</label>
+                  <span class="field-unit-pill">°/s</span>
+                </div>
+                <input type="number" id="feat_gyro_mag_mean" class="feat-num-input" step="1.0" min="0" max="1000" value="22.4">
+                <span class="field-desc">Mean angular velocity</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_gyro_mag_std">gyro_std</label>
+                  <span class="field-unit-pill">°/s</span>
+                </div>
+                <input type="number" id="feat_gyro_mag_std" class="feat-num-input" step="1.0" min="0" max="800" value="14.2">
+                <span class="field-desc">Angular standard dev</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_gyro_mag_min">gyro_min</label>
+                  <span class="field-unit-pill">°/s</span>
+                </div>
+                <input type="number" id="feat_gyro_mag_min" class="feat-num-input" step="0.5" min="0" max="300" value="4.5">
+                <span class="field-desc">Minimum rotation floor</span>
+              </div>
+
+              <div class="feature-field-unit highlight-field">
+                <div class="field-top-row">
+                  <label for="feat_gyro_mag_max">gyro_max</label>
+                  <span class="field-unit-pill">°/s</span>
+                </div>
+                <input type="number" id="feat_gyro_mag_max" class="feat-num-input" step="5.0" min="0" max="1200" value="28.5">
+                <span class="field-desc">Peak rotational excursion</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_gyro_mag_range">gyro_range</label>
+                  <span class="field-unit-pill">°/s</span>
+                </div>
+                <input type="number" id="feat_gyro_mag_range" class="feat-num-input" step="5.0" min="0" max="1200" value="24.0">
+                <span class="field-desc">Angular dynamic span</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_gyro_mag_rms">gyro_rms</label>
+                  <span class="field-unit-pill">°/s</span>
+                </div>
+                <input type="number" id="feat_gyro_mag_rms" class="feat-num-input" step="1.0" min="0" max="1000" value="26.5">
+                <span class="field-desc">RMS angular energy</span>
+              </div>
+
+            </div>
+          </fieldset>
+
+          <!-- Feature Group 3: Kinetic Dynamics, Jerk & Orientation Shift -->
+          <fieldset class="feature-group-card">
+            <legend class="group-legend">
+              <span class="legend-dot dot-dynamics"></span>
+              Dynamics, Jerk &amp; Orientation Differentials
+            </legend>
+            <div class="feature-inputs-grid grid-dense-5">
+              
+              <div class="feature-field-unit highlight-field">
+                <div class="field-top-row">
+                  <label for="feat_acc_jerk_mean">SMA (jerk)</label>
+                  <span class="field-unit-pill">g</span>
+                </div>
+                <input type="number" id="feat_acc_jerk_mean" class="feat-num-input" step="0.005" min="0" max="5" value="0.040">
+                <span class="field-desc">Signal Magnitude Area</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_acc_jerk_max">jerk_peak</label>
+                  <span class="field-unit-pill">g</span>
+                </div>
+                <input type="number" id="feat_acc_jerk_max" class="feat-num-input" step="0.05" min="0" max="10" value="0.12">
+                <span class="field-desc">Impact jerk spike</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_post_impact_immobility_var">post_impact_var</label>
+                  <span class="field-unit-pill">g²</span>
+                </div>
+                <input type="number" id="feat_post_impact_immobility_var" class="feat-num-input" step="0.0005" min="0" max="4" value="0.0080">
+                <span class="field-desc">Variance post-peak (&lt;0.01)</span>
+              </div>
+
+              <div class="feature-field-unit highlight-field">
+                <div class="field-top-row">
+                  <label for="feat_tilt_differential">tilt_angle_change</label>
+                  <span class="field-unit-pill">°</span>
+                </div>
+                <input type="number" id="feat_tilt_differential" class="feat-num-input" step="0.5" min="0" max="180" value="5.8">
+                <span class="field-desc">Delta theta differential</span>
+              </div>
+
+              <div class="feature-field-unit">
+                <div class="field-top-row">
+                  <label for="feat_peak_acc_jerk_dt">peak_jerk_dt</label>
+                  <span class="field-unit-pill">g/s</span>
+                </div>
+                <input type="number" id="feat_peak_acc_jerk_dt" class="feat-num-input" step="1.0" min="0" max="500" value="6.5">
+                <span class="field-desc">Peak rate d|a|/dt</span>
+              </div>
+
+            </div>
+          </fieldset>
+        </div>
+
+        <!-- Right Column: Mobile Volume Controller, Execution & Crypto Verification -->
+        <div class="tinyml-execution-column">
+          
+          <!-- Controller Card: Mobile Volume Immobility Slider -->
+          <div class="execution-card volume-controller-card">
+            <div class="card-header-row">
+              <span class="card-icon" aria-hidden="true">⏱️</span>
+              <div>
+                <h4 class="card-title">Post-Fall Immobility Controller</h4>
+                <span class="card-subtitle">Mobile OS Volume Slider • Gated Threshold Check: SMA &lt; 0.15g</span>
+              </div>
+            </div>
+
+            <!-- Mobile OS Volume Slider Control -->
+            <div class="mobile-volume-box" role="region" aria-label="Immobility Duration Controller">
+              <div class="volume-slider-layout">
+                <button type="button" class="volume-step-btn" id="immobilityDecBtn" aria-label="Decrease immobility window by 1 second">
+                  <span aria-hidden="true">−</span>
+                </button>
+                
+                <div class="volume-track-container" id="immobilityVolumeTrack" role="slider" aria-valuemin="1" aria-valuemax="30" aria-valuenow="10" aria-label="Post-Fall Immobility Timer in seconds" tabindex="0">
+                  <div class="volume-track-fill" id="immobilityVolumeFill" style="width: 31.03%;"></div>
+                  <div class="volume-track-ticks" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span><span></span>
+                    <span></span><span></span><span></span><span></span><span></span>
+                  </div>
+                  <div class="volume-track-thumb" id="immobilityThumb" style="left: 31.03%;"></div>
+                </div>
+
+                <button type="button" class="volume-step-btn" id="immobilityIncBtn" aria-label="Increase immobility window by 1 second">
+                  <span aria-hidden="true">+</span>
+                </button>
+              </div>
+
+              <div class="volume-stats-row">
+                <div class="volume-large-readout">
+                  <span class="readout-num" id="immobilityValDisplay">10</span>
+                  <span class="readout-unit">SECONDS</span>
+                </div>
+                <div class="volume-meta-tag">
+                  <span class="badge-tag">Gating: P &ge; 0.50 &amp; Resting &ge; Window</span>
+                  <span class="badge-range">Range: 1s – 30s (Default: 10s)</span>
+                </div>
+              </div>
+
+              <!-- Post-Impact State Radio Selector -->
+              <div class="post-impact-state-selector">
+                <span class="state-label">Post-Impact Movement State:</span>
+                <div class="state-options-row">
+                  <label class="state-option-item">
+                    <input type="radio" name="immobilityStateChoice" id="immobilityStateMotionless" value="motionless" checked>
+                    <span class="state-custom-radio"></span>
+                    <span class="state-text">
+                      <strong>Motionless / Resting</strong>
+                      <small>SMA = 0.03g &lt; 0.15g (Critical Alert)</small>
+                    </span>
+                  </label>
+                  <label class="state-option-item">
+                    <input type="radio" name="immobilityStateChoice" id="immobilityStateActive" value="active">
+                    <span class="state-custom-radio"></span>
+                    <span class="state-text">
+                      <strong>Active Motion / Recovery</strong>
+                      <small>SMA = 0.38g &ge; 0.15g (Voluntary Suppression)</small>
+                    </span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Primary Execution Run Button -->
+          <div class="execution-action-card">
+            <button type="button" class="btn-run-tinyml-pipeline" id="runTinyMLPipelineBtn">
+              <span class="btn-glow-layer" aria-hidden="true"></span>
+              <span class="btn-icon" aria-hidden="true">⚡</span>
+              <span class="btn-text">Run TinyML Pipeline &amp; Encrypt</span>
+              <span class="btn-badge">&lt; 5 ms Latency</span>
+            </button>
+          </div>
+
+          <!-- TinyML Classification Results Card -->
+          <div class="execution-card results-card" id="tinymlResultsCard">
+            <div class="card-header-row">
+              <span class="card-icon" aria-hidden="true">📊</span>
+              <div>
+                <h4 class="card-title">TinyML Decision Forest Diagnostics</h4>
+                <span class="card-subtitle">20 Shallow Estimators • Adaptive Two-Stage Verification</span>
+              </div>
+              <span class="diagnostic-pill pill-normal" id="testBenchStatusPill">ADL Verified</span>
+            </div>
+
+            <div class="results-grid">
+              <!-- Confidence Progress Bar -->
+              <div class="confidence-meter-box">
+                <div class="meter-label-row">
+                  <span>Ensemble Fall Probability P(Fall):</span>
+                  <strong class="confidence-val" id="testBenchConfidenceVal">3.2%</strong>
+                </div>
+                <div class="meter-bar-track">
+                  <div class="meter-bar-fill fill-normal" id="testBenchConfidenceMeter" style="width: 3.2%;"></div>
+                  <div class="meter-threshold-marker" title="Decision Threshold: 50%">
+                    <span>Threshold 50%</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Multi-Stage Gating Breakdown -->
+              <div class="gating-breakdown-list">
+                <div class="gating-row" id="rowStage1Shock">
+                  <span class="gating-step">Stage 1 Peak Shock:</span>
+                  <span class="gating-data" id="auditStage1Shock">1.15g &lt; 2.30g (Sub-threshold Normal)</span>
+                  <span class="gating-icon icon-pass" id="iconStage1">✓</span>
+                </div>
+                <div class="gating-row" id="rowStage2RF">
+                  <span class="gating-step">Stage 2 Random Forest:</span>
+                  <span class="gating-data" id="auditStage2RF">P(Fall) = 0.032 &lt; 0.50 (ADL Classified)</span>
+                  <span class="gating-icon icon-pass" id="iconStage2">✓</span>
+                </div>
+                <div class="gating-row" id="rowStage3Immobility">
+                  <span class="gating-step">Stage 3 Immobility Guard:</span>
+                  <span class="gating-data" id="auditStage3Immobility">Window: 10s • Safe Cadence Verified</span>
+                  <span class="gating-icon icon-pass" id="iconStage3">✓</span>
+                </div>
+                <div class="gating-row" id="rowLatency">
+                  <span class="gating-step">Inference Benchmark:</span>
+                  <span class="gating-data" id="auditLatency">0.42 ms (Pure C99/JS Flash-grade)</span>
+                  <span class="gating-icon icon-fast">⚡</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ASCON-128 AEAD Cryptographic Verification Card -->
+          <div class="execution-card crypto-card" id="asconCryptoCard">
+            <div class="card-header-row">
+              <span class="card-icon" aria-hidden="true">🔒</span>
+              <div>
+                <h4 class="card-title">NIST ASCON-128 AEAD Cryptographic Channel</h4>
+                <span class="card-subtitle">Zero-Tamper Authenticated Payload Encryption &amp; Bit-for-bit C Parity</span>
+              </div>
+              <span class="crypto-status-pill pill-verified" id="asconVerificationBadge">✓ TAG MATCH: VALID</span>
+            </div>
+
+            <div class="crypto-details-grid">
+              
+              <div class="crypto-row">
+                <span class="crypto-label">Plaintext Outgoing Payload:</span>
+                <pre class="crypto-code-box" id="asconPlaintextDisplay">{ "status": "NORMAL", "confidence": 0.032, "immobility_secs": 10 }</pre>
+              </div>
+
+              <div class="crypto-meta-row">
+                <div class="crypto-meta-item">
+                  <span class="meta-label">Associated Data (AD):</span>
+                  <code class="meta-code" id="asconAdDisplay">ElderCare-ESP32-V2.4</code>
+                </div>
+                <div class="crypto-meta-item">
+                  <span class="meta-label">Fresh Nonce (64-bit/128-bit):</span>
+                  <code class="meta-code" id="asconNonceDisplay">00000000000012D4</code>
+                </div>
+                <div class="crypto-meta-item">
+                  <span class="meta-label">Master Key (128-bit):</span>
+                  <code class="meta-code" id="asconKeyDisplay">000102030405060708090a0b0c0d0e0f</code>
+                </div>
+              </div>
+
+              <div class="crypto-row">
+                <div class="row-label-with-action">
+                  <span class="crypto-label">ASCON Ciphertext (Hex):</span>
+                  <button type="button" class="btn-copy-hex" id="copyCipherBtn" title="Copy ciphertext hex to clipboard">
+                    <span>Copy Hex</span>
+                  </button>
+                </div>
+                <div class="crypto-hex-box" id="asconCiphertextDisplay">e4c9f18a22bc7d0e44a90812...</div>
+              </div>
+
+              <div class="crypto-row">
+                <span class="crypto-label">ASCON-128 Authentication Tag (16 Bytes / 128-bit):</span>
+                <div class="crypto-tag-box" id="asconTagDisplay">3a94f0e1bc9842a1789c10ef443210aa</div>
+              </div>
+
+              <div class="crypto-footer-row">
+                <div class="crypto-latency-info">
+                  <span>Cryptographic Overhead:</span>
+                  <strong id="asconLatencyDisplay">0.24 ms</strong>
+                  <span class="parity-check-tag">100% C99 Firmware Bit-For-Bit Parity</span>
+                </div>
+                <button type="button" class="btn-dismiss-alert-banner" id="dismissBannerFromBenchBtn">
+                  Dismiss Dashboard Alert
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </dialog>
+
+  <!-- =======================================================================
        COOKIE & TELEMETRY CONSENT BANNER (Checklist Item 5)
        ======================================================================= -->
   <aside class="cookie-banner" id="cookieConsentBanner" role="dialog" aria-label="Cookie and Telemetry Consent">
@@ -591,6 +1047,8 @@
 
   <!-- Client-Side Cryptographic Engine & Telemetry Scripts -->
   <script src="ascon.js"></script>
+  <script src="tinyml_engine.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
+
