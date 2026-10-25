@@ -59,14 +59,9 @@
         <div class="brand-info">
           <h1 class="brand-title">
             ElderCare IoT
-            <span class="brand-badge-version clickable-tinyml-trigger" id="versionBadgeTrigger" title="Click to Verify TinyML &amp; Encrypt" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Version 2.4 ESP32. Click to Verify TinyML and Encrypt">
+            <span class="brand-badge-version" id="versionBadgeTrigger" title="Version 2.4 ESP32">
               v2.4-ESP32
             </span>
-            <button type="button" class="tinyml-header-quickbtn" id="openTinyMLModalBtn" title="Click to Verify TinyML &amp; Encrypt" aria-label="Open TinyML &amp; ASCON-128 Test Bench">
-              <span class="tinyml-btn-pulse" aria-hidden="true"></span>
-              <span class="tinyml-btn-icon" aria-hidden="true">⚡</span>
-              <span class="tinyml-btn-text">Verify TinyML &amp; Encrypt</span>
-            </button>
           </h1>
           <span class="brand-subtitle">Clinical Caregiver Telemetry &amp; Wrist Kinematics Console</span>
         </div>
@@ -78,11 +73,15 @@
           <span id="headerSyncText">Device Live (50 Hz)</span>
         </div>
 
+        <button type="button" class="header-btn" id="openTinyMLModalBtn" aria-haspopup="dialog" title="Verify TinyML &amp; Encrypt">
+          Verify TinyML &amp; Encrypt
+        </button>
+
         <button type="button" class="header-btn" id="themeToggleBtn" aria-label="Toggle dark mode">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
           </svg>
-          <span id="themeToggleLabel">Theme</span>
+          <span id="themeToggleLabel">Theme: Dark</span>
         </button>
 
         <button type="button" class="header-btn" id="privacyNavBtn" aria-haspopup="dialog">
@@ -265,44 +264,41 @@
           <span class="card-badge" id="lastUpdatedBadge">Synced: Just now</span>
         </div>
 
-        <!-- Interactive Leaflet Map Card -->
-        <section class="dashboard-card map-card" aria-labelledby="mapCardHeading">
-          <div class="card-header">
-            <div class="card-title-group">
-              <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-                <line x1="8" y1="2" x2="8" y2="18"/>
-                <line x1="16" y1="6" x2="16" y2="22"/>
-              </svg>
-              <h2 class="card-title" id="mapCardHeading">Spatial Geofence &amp; Incident Location</h2>
+        <!-- Compact Rectangular Spatial Map Card (Directive 4) -->
+        <section class="dashboard-card map-card-compact" aria-labelledby="mapCardHeading">
+          <div class="compact-map-header">
+            <div class="map-location-meta">
+              <span class="location-name" id="mapCardHeading">ECE Dept, SIST Campus</span>
+              <span class="location-institution">Sathyabama Institute of Science and Technology</span>
             </div>
-            <span class="card-badge" id="gpsLockStatusBadge">GPS Lock Active</span>
+            <div class="map-status-coord-group">
+              <span class="map-coords-badge" id="mapCoordinatesBadge">
+                LAT <span id="mapLatDisplay">12.8705° N</span> | LON <span id="mapLonDisplay">80.2198° E</span>
+              </span>
+              <div class="map-gps-status">
+                <span class="gps-pulse-dot" aria-hidden="true"></span>
+                <span id="gpsStatusText">GPS Locked (Active 3D Fix)</span>
+              </div>
+            </div>
           </div>
 
-          <!-- Leaflet Viewport Container -->
-          <div class="map-viewport" id="leafletMapContainer" role="region" aria-label="Interactive patient geolocation map"></div>
+          <!-- Sleek rectangular map preview window (h-48 / ~195px) -->
+          <div class="map-viewport-compact" id="leafletMapContainer" role="region" aria-label="Interactive patient geolocation map"></div>
 
-          <div class="map-action-bar">
-            <div class="coords-readout">
-              Location: <strong>Sathyabama University, Chennai</strong>
-              (<span id="mapLatDisplay">12.873100</span>, <span id="mapLonDisplay">80.221900</span>)
-              <span style="margin-left: 0.5rem; color: var(--text-muted);">(Geofence: 100m Safe Radius)</span>
-            </div>
-
-            <div class="map-controls-group">
-              <button type="button" class="btn-secondary" id="btnToggleMapLayer">
-                Satellite / Street
-              </button>
-              <button type="button" class="btn-secondary" id="btnRecenterMap">
-                Recenter
-              </button>
-              <button type="button" class="btn-secondary" id="btnToggleGeofence">
-                Toggle Geofence
-              </button>
-              <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" class="btn-secondary" id="btnExternalMaps">
-                Open in Maps ↗
-              </a>
-            </div>
+          <!-- Centered Open in Google Maps action button -->
+          <div class="compact-map-footer">
+            <a href="https://www.google.com/maps/search/?api=1&query=12.8705,80.2198" target="_blank" rel="noopener noreferrer" class="btn-open-google-maps" id="btnExternalMaps">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+              <span>Open in Google Maps</span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
+            </a>
           </div>
         </section>
 
@@ -593,7 +589,11 @@
       <header class="tinyml-modal-header">
         <div class="tinyml-header-title-wrap">
           <div class="tinyml-chip-icon-box" aria-hidden="true">
-            <span>⚡</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
           </div>
           <div>
             <h2 id="tinymlModalTitle" class="tinyml-modal-title">
@@ -604,13 +604,41 @@
             </p>
           </div>
         </div>
-        <button type="button" class="tinyml-close-btn" id="closeTinyMLModalBtn" aria-label="Close Test Bench Dialog">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
+
+        <div class="tinyml-modal-header-actions">
+          <button type="button" class="header-btn" id="modalThemeToggleBtn" aria-label="Toggle dark mode">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+            </svg>
+            <span id="modalThemeToggleLabel">Theme: Dark</span>
+          </button>
+
+          <button type="button" class="tinyml-close-btn" id="closeTinyMLModalBtn" aria-label="Close Test Bench Dialog">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
       </header>
+
+      <!-- Pre-Verification Clinical Disclaimer Notice (Directive 3) -->
+      <aside class="clinical-disclaimer-notice" id="clinicalDisclaimerNotice" role="alert" aria-live="polite">
+        <div class="disclaimer-icon-wrap" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="disclaimer-content">
+          <h4 class="disclaimer-title">CLINICAL TELEMETRY &amp; MODEL VALIDATION NOTICE</h4>
+          <p class="disclaimer-body">
+            Diagnostic evaluations and simulated kinematics executed within this verification console are calibrated against standardized open-access fall benchmarks (SisFall &amp; UMAFall datasets). While the embedded Random Forest classifier exhibits a ~95% cross-validation classification accuracy under benchmarked constraints, physical biomechanical variables, anatomical wrist positioning, and real-world shock dynamics may introduce variance. This test bench serves as a hardware-in-the-loop firmware validation interface and should not replace primary clinical supervision.
+          </p>
+        </div>
+        <button type="button" class="disclaimer-dismiss-btn" id="dismissDisclaimerBtn" aria-label="Dismiss clinical notice">✕</button>
+      </aside>
 
       <!-- Presets & Status Bar -->
       <section class="tinyml-presets-toolbar" aria-label="Simulation Presets">
@@ -631,7 +659,7 @@
 
         <div class="tinyml-engine-chip" id="engineStatusChip" role="status" aria-live="polite">
           <span class="chip-status-dot"></span>
-          <span id="engineStatusText">TinyML Edge Engine Ready (&lt; 5 ms)</span>
+          <span id="engineStatusText">Firmware Decision Forest Ready (&lt; 5 ms)</span>
         </div>
       </section>
 
@@ -641,7 +669,7 @@
         <!-- Left Column: 17 Rotation-Invariant Extracted Feature Parameters -->
         <div class="tinyml-features-column">
           <div class="column-header">
-            <h3 class="column-title">17 Rotation-Invariant Model Features</h3>
+            <h3 class="column-title">17 Rotation-Invariant Kinematic Features</h3>
             <span class="column-subtitle">C99 Fixed-Dimension Vector • Rotation &amp; Wrist Invariant</span>
           </div>
 
@@ -905,19 +933,17 @@
           <!-- Primary Execution Run Button -->
           <div class="execution-action-card">
             <button type="button" class="btn-run-tinyml-pipeline" id="runTinyMLPipelineBtn">
-              <span class="btn-glow-layer" aria-hidden="true"></span>
-              <span class="btn-icon" aria-hidden="true">⚡</span>
-              <span class="btn-text">Run TinyML Pipeline &amp; Encrypt</span>
+              <span class="btn-text">Run Verification Pipeline &amp; Encrypt</span>
               <span class="btn-badge">&lt; 5 ms Latency</span>
             </button>
           </div>
 
-          <!-- TinyML Classification Results Card -->
+          <!-- Firmware Classification Results Card -->
           <div class="execution-card results-card" id="tinymlResultsCard">
             <div class="card-header-row">
               <span class="card-icon" aria-hidden="true">📊</span>
               <div>
-                <h4 class="card-title">TinyML Decision Forest Diagnostics</h4>
+                <h4 class="card-title">Embedded Random Forest Diagnostics</h4>
                 <span class="card-subtitle">20 Shallow Estimators • Adaptive Two-Stage Verification</span>
               </div>
               <span class="diagnostic-pill pill-normal" id="testBenchStatusPill">ADL Verified</span>

@@ -46,8 +46,8 @@ webpush.setVapidDetails(
 let telemetryState = {
   status: "NORMAL",
   impact: 0.0,
-  lat: 12.8731, // Sathyabama University, Chennai
-  lon: 80.2219,
+  lat: 12.8705, // Sathyabama University, Chennai
+  lon: 80.2198,
   hr: 0,
   battery: 89,
   spo2: 0,

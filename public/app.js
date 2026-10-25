@@ -45,8 +45,8 @@ const state = {
   telemetry: {
     status: 'NORMAL',
     impact: 1.02,
-    lat: 12.8731,
-    lon: 80.2219,
+    lat: 12.8705,
+    lon: 80.2198,
     hr: 72,
     spo2: 98,
     battery: 94,
@@ -57,7 +57,7 @@ const state = {
     lastUpdated: new Date()
   },
   geofence: {
-    homeCoords: [12.8731, 80.2219],
+    homeCoords: [12.8705, 80.2198],
     radiusMeters: 100,
     visible: true
   },
@@ -97,7 +97,7 @@ function initLeafletMap() {
 
   try {
     leafletMap = L.map('leafletMapContainer', {
-      zoomControl: true,
+      zoomControl: false,
       attributionControl: false
     }).setView(state.geofence.homeCoords, 17);
 
@@ -205,13 +205,13 @@ function updateMapMarker(lat, lon, isEmergency) {
   // Update UI coordinate display
   const latEl = document.getElementById('mapLatDisplay');
   const lonEl = document.getElementById('mapLonDisplay');
-  if (latEl) latEl.innerText = lat.toFixed(6);
-  if (lonEl) lonEl.innerText = lon.toFixed(6);
+  if (latEl) latEl.innerText = `${Math.abs(lat).toFixed(4)}° ${lat >= 0 ? 'N' : 'S'}`;
+  if (lonEl) lonEl.innerText = `${Math.abs(lon).toFixed(4)}° ${lon >= 0 ? 'E' : 'W'}`;
 
   // Update Google Maps button link
   const extMapsBtn = document.getElementById('btnExternalMaps');
   if (extMapsBtn) {
-    extMapsBtn.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`;
+    extMapsBtn.href = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}`;
   }
 }
 
@@ -814,19 +814,31 @@ function setupModalsAndForms() {
     }
   });
 
-  // Authentic Google Dark Theme Toggle
+  // Authentic Google Dark Theme Toggle (Synchronized across Header and Test Bench Modal)
   const themeBtn = document.getElementById('themeToggleBtn');
   const themeLabel = document.getElementById('themeToggleLabel');
+  const modalThemeBtn = document.getElementById('modalThemeToggleBtn');
+  const modalThemeLabel = document.getElementById('modalThemeToggleLabel');
+
+  function setAppTheme(theme) {
+    document.body.dataset.theme = theme;
+    localStorage.setItem('elder_theme', theme);
+    const labelText = theme === 'dark' ? 'Theme: Dark' : 'Theme: Light';
+    if (themeLabel) themeLabel.innerText = labelText;
+    if (modalThemeLabel) modalThemeLabel.innerText = labelText;
+  }
+
   const savedTheme = localStorage.getItem('elder_theme') || 'dark';
-  document.body.dataset.theme = savedTheme;
-  if (themeLabel) themeLabel.innerText = savedTheme === 'dark' ? 'Theme: Dark' : 'Theme: Light';
+  setAppTheme(savedTheme);
 
   themeBtn?.addEventListener('click', () => {
-    const cur = document.body.dataset.theme;
-    const next = cur === 'dark' ? 'light' : 'dark';
-    document.body.dataset.theme = next;
-    localStorage.setItem('elder_theme', next);
-    if (themeLabel) themeLabel.innerText = next === 'dark' ? 'Theme: Dark' : 'Theme: Light';
+    const next = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+    setAppTheme(next);
+  });
+
+  modalThemeBtn?.addEventListener('click', () => {
+    const next = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+    setAppTheme(next);
   });
 }
 
@@ -849,9 +861,18 @@ function initTinyMLTestBench() {
   const versionTrigger = document.getElementById('versionBadgeTrigger');
   const quickTriggerBtn = document.getElementById('openTinyMLModalBtn');
   const closeBtn = document.getElementById('closeTinyMLModalBtn');
+  const clinicalNotice = document.getElementById('clinicalDisclaimerNotice');
+  const dismissDisclaimerBtn = document.getElementById('dismissDisclaimerBtn');
 
-  // Open modal handlers
+  dismissDisclaimerBtn?.addEventListener('click', () => {
+    if (clinicalNotice) clinicalNotice.style.display = 'none';
+  });
+
+  // Open modal handlers - Always present clinical disclaimer notice fresh on open
   const openModal = () => {
+    if (clinicalNotice) {
+      clinicalNotice.style.display = 'flex';
+    }
     if (typeof modal.showModal === 'function') {
       modal.showModal();
     }
