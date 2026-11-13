@@ -405,6 +405,45 @@
           </div>
         </section>
 
+        <!-- ===================================================================
+             CUSTOM ENCRYPTION CONTROLLER (Under Daily Steps Card)
+             =================================================================== -->
+        <section class="dashboard-card encryption-action-card" aria-labelledby="encryptControlHeading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <svg class="card-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <h2 class="card-title" id="encryptControlHeading">Telemetry Cryptographic Guard</h2>
+            </div>
+            <span class="crypto-state-indicator" id="cryptoStateIndicator">Active</span>
+          </div>
+
+          <p class="encryption-desc-text">
+            Enforce end-to-end cryptographic protection for patient telemetry. Encrypts all live sensor metrics with NIST ASCON-128 AEAD &amp; DNA-XOR before committing to Firebase cloud.
+          </p>
+
+          <div class="encryption-btn-wrapper">
+            <button type="button" class="btn-encrypt-action" id="btnEncryptAllTelemetry">
+              <svg class="btn-lock-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span id="btnEncryptActionText">Encrypt &amp; Authenticate Telemetry</span>
+            </button>
+          </div>
+
+          <!-- Formal Cryptographic Notification Box -->
+          <div class="crypto-formal-notice" id="cryptoFormalNotice" role="status" aria-live="polite" style="display: none;">
+            <div class="notice-icon" id="cryptoNoticeIcon">🔒</div>
+            <div class="notice-body">
+              <div class="notice-title" id="cryptoNoticeTitle">Data Encryption Status</div>
+              <div class="notice-text" id="cryptoNoticeText">Verification in progress...</div>
+            </div>
+          </div>
+        </section>
+
         <!-- Cryptographic Verification Badge (NIST ASCON-128 AEAD) -->
         <section class="dashboard-card crypto-badge-card" aria-labelledby="cryptoHeading">
           <div class="card-header">
